@@ -1,0 +1,127 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Voting</title>
+    <style>
+        /* Previous styles remain the same */
+        .image-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .image-pair {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .image-card {
+            flex: 1;
+            text-align: center;
+        }
+        img {
+            max-width: 400px;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+        .voting {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+        .vote-count {
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        #submit-all {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% for image in images %}
+    <div class="image-container">
+        <div class="image-pair">
+            <!-- Image display remains the same -->
+            <div class="image-card">
+                <h3>Original</h3>
+                <img src="{{ url_for('serve_original', filename=image.ori_path.split('original_image_folder/')[1]) }}">
+            </div>
+            <div class="image-card">
+                <h3>Generated</h3>
+                <img src="{{ url_for('serve_generated', filename=image.path.split('generated_first_pass/')[1]) }}">
+            </div>
+        </div>
+        <div class="voting">
+            <div class="vote-buttons">
+                <button onclick="updateVote('{{ image.key }}', 1)">👍 Vote Up</button>
+                <button onclick="updateVote('{{ image.key }}', -1)">👎 Vote Down</button>
+            </div>
+            <div class="vote-count">
+                Votes: <span id="vote-{{ image.key }}" data-original-vote="{{ image.vote }}">{{ image.vote }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <button id="submit-all" onclick="submitAllVotes()">Submit All Votes</button>
+
+    <script>
+        let voteUpdates = {};
+
+        function updateVote(key, delta) {
+            if (!voteUpdates[key]) voteUpdates[key] = 0;
+            voteUpdates[key] += delta;
+            
+            // Update display
+            const element = document.getElementById(`vote-${key}`);
+            const original = parseInt(element.dataset.originalVote);
+            element.textContent = original + voteUpdates[key];
+        }
+
+        async function submitAllVotes() {
+            try {
+                // Filter out entries with no actual changes
+                const nonZeroUpdates = Object.fromEntries(
+                    Object.entries(voteUpdates).filter(([_, delta]) => delta !== 0)
+                );
+
+                if (Object.keys(nonZeroUpdates).length === 0) {
+                    alert('No votes to submit!');
+                    return;
+                }
+
+                const response = await fetch('/vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(nonZeroUpdates)
+                });
+
+                const data = await response.json();
+                
+                // Update original values and reset deltas
+                for (const [key, newTotal] of Object.entries(data)) {
+                    const element = document.getElementById(`vote-${key}`);
+                    element.dataset.originalVote = newTotal;
+                    element.textContent = newTotal;
+                    delete voteUpdates[key];
+                }
+                
+                alert('Votes submitted successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting votes');
+            }
+        }
+    </script>
+</body>
+</html>
