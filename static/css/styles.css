@@ -1,0 +1,140 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: black;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 300;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #3498db;
+    color: white;
+}
+
+th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.product-row {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.product-row:hover {
+    background-color: #f1f3f5;
+}
+
+.file-row {
+    background-color: #f8f9fa;
+}
+
+.file-row table {
+    margin: 10px;
+    box-shadow: none;
+    border: 1px solid #e0e0e0;
+}
+
+.file-row td {
+    font-size: 0.9em;
+    color: #495057;
+}
+
+/* Status Coloring */
+td[data-status="completed"],
+td[data-status="Completed"] {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+td[data-status="in-progress"],
+td[data-status="In Progress"] {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+td[data-status="pending"],
+td[data-status="Pending"] {
+    color: #3498db;
+}
+
+td[data-status="failed"],
+td[data-status="Failed"] {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Add this before the responsive design section */
+.status-incomplete {
+    background-color: #ffebee;
+    color: #c62828;
+    font-weight: bold;
+}
+
+/* Add this near other status styles */
+.status-pending {
+    background-color: #ffebee;
+    color: #c62828;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 600px) {
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+    
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+    
+    td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+    }
+    
+    td:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        content: attr(data-label);
+        color: #000;
+        font-weight: bold;
+    }
+}

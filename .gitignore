@@ -1,1 +1,3 @@
-images
+images.db
+__pycache__/
+*.pyc
