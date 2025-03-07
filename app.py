@@ -10,4 +10,6 @@ app.register_blueprint(main_bp)
 app.register_blueprint(product_api)
 
 if __name__ == "__main__":
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.jinja_env.auto_reload = True
     app.run(debug=True)

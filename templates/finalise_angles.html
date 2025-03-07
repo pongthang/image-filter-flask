@@ -1,0 +1,293 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <div class="header">
+    <div class="heading" id="product-id"></div>
+    <div class="radio-buttons">
+      <label><input type="radio" name="angle" value="1" checked /> Front</label>
+      <label><input type="radio" name="angle" value="2" /> Side</label>
+      <label><input type="radio" name="angle" value="3" /> Back</label>
+      <label><input type="radio" name="angle" value="4" /> Full</label>
+    </div>
+    <div class="action-grp">
+      <button id="submit-btn">Submit</button>
+      <button id="nxt-btn">Next</button>
+      <button id="bk-btn">Back</button>
+    </div>
+  </div>
+  <div class="image-grid" id="image-grid"></div>
+</div>
+<script>
+  function showCustomAlert(message) {
+    const alertBox = document.createElement("div");
+    alertBox.textContent = message;
+    alertBox.style.position = "fixed";
+    alertBox.style.top = "20px";
+    alertBox.style.left = "90%";
+    alertBox.style.transform = "translateX(-50%)";
+    alertBox.style.background = "gray";
+    alertBox.style.color = "white";
+    alertBox.style.padding = "10px 20px";
+    alertBox.style.borderRadius = "5px";
+    alertBox.style.zIndex = "9999";
+    document.body.appendChild(alertBox);
+
+    setTimeout(() => {
+      alertBox.remove();
+    }, 2000); // Disappears after 2 seconds
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    let selectedImages = {};
+    let productData = [];
+
+    function fetchImages() {
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get("index"); // Replace 'key' with your parameter name
+
+      if (value === null) {
+        //update url params
+        window.history.pushState({}, "", `?index=0`);
+        window.location.reload();
+      }
+
+      fetch(`api/products/finalise-product?index=${value}`)
+        .then((response) => response.json())
+        .then((data) => {
+          productData = data;
+          let imageGrid = document.getElementById("image-grid");
+          imageGrid.innerHTML = "";
+
+          let productHeading = document.getElementById("product-id");
+          // Extract product_id from the first image
+          const productId = data[0]?.product_id || "Unknown";
+          productHeading.innerText = `Product ID: ${productId}`;
+
+          data.forEach((image) => {
+            let imageContainer = document.createElement("div");
+            imageContainer.classList.add("image-container");
+
+            let imageLabel = document.createElement("div");
+            imageLabel.classList.add("image-label");
+            imageLabel.setAttribute("label-id", image.image_path);
+
+            // Default label text
+            imageLabel.innerText = "Not Assigned";
+
+            let imgElement = document.createElement("img");
+            imgElement.src = image.image_path;
+            imgElement.classList.add("selectable");
+            imgElement.setAttribute("data-id", image.image_path);
+            imgElement.setAttribute(
+              "data-finalised-id",
+              image.finalised_angles_id
+            );
+
+            // If angle_id is not null, pre-select this image for that angle
+            if (image.angle_id !== null) {
+              const angleValue = image.angle_id.toString();
+              selectedImages[angleValue] = image.image_path;
+              imageLabel.innerText = `Angle ${angleValue}`;
+              imgElement.classList.add("gray");
+            }
+
+            imgElement.addEventListener("click", function () {
+              let currentSelectedRadio = document.querySelector(
+                'input[name="angle"]:checked'
+              );
+              let currentAngle = currentSelectedRadio.value;
+
+              if (selectedImages[currentAngle]) {
+                let previousSelectedImg = document.querySelector(
+                  `.selectable[data-id='${selectedImages[currentAngle]}']`
+                );
+                if (previousSelectedImg) {
+                  previousSelectedImg.classList.remove("gray");
+                  let previousImageLabel = document.querySelector(
+                    `[label-id='${selectedImages[currentAngle]}']`
+                  );
+                  if (previousImageLabel) {
+                    previousImageLabel.innerText = "Not Assigned";
+                  }
+                }
+              }
+
+              selectedImages[currentAngle] = this.getAttribute("data-id");
+              imageLabel.innerText = `Angle ${currentAngle}`;
+              this.classList.add("gray");
+
+              // Select the next radio button if available
+              let nextLabel =
+                currentSelectedRadio.closest("label").nextElementSibling;
+              let nextRadio = nextLabel
+                ? nextLabel.querySelector('input[name="angle"]')
+                : null;
+
+              if (nextRadio) {
+                nextRadio.checked = true;
+              }
+
+              console.log("Selected images:", selectedImages);
+            });
+
+            imageContainer.appendChild(imgElement);
+            imageContainer.appendChild(imageLabel);
+
+            imageGrid.appendChild(imageContainer);
+          });
+        })
+        .catch((error) => console.error("Error fetching images:", error));
+    }
+
+    document
+      .getElementById("submit-btn")
+      .addEventListener("click", function () {
+        // Format the data for the API
+
+        let body = [];
+
+        let si = Object.entries(selectedImages);
+
+        console.log(si);
+        for (let i = 0; i < productData.length; i++) {
+          const matches = si.filter(
+            ([key, path]) => path === productData[i].image_path
+          );
+          if (matches.length > 0) {
+            productData[i].angle_id = parseInt(matches[0][0]);
+          } else {
+            productData[i].angle_id = null;
+          }
+        }
+
+        body = [...productData];
+
+        console.log("Finalised images:", body);
+
+        fetch(
+          `/api/products/finalise-product?product_id=${body[0].product_id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            showCustomAlert("Data saved successfully");
+            console.log(data);
+          })
+          .catch((error) => console.error("Error:", error));
+      });
+
+    document.getElementById("nxt-btn").addEventListener("click", function () {
+      console.log("Navigating to the next product");
+      // Navigate to the next product
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get("index");
+
+      window.history.pushState({}, "", `?index=${parseInt(value) + 1}`);
+      window.location.reload();
+    });
+
+    document.getElementById("bk-btn").addEventListener("click", function () {
+      console.log("Navigating to the next product");
+      // Navigate to the next product
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get("index");
+
+      if (parseInt(value) === 0) {
+        return;
+      }
+
+      window.history.pushState({}, "", `?index=${parseInt(value) - 1}`);
+      window.location.reload();
+    });
+
+    fetchImages();
+  });
+</script>
+<style>
+  .action-grp {
+    display: flex;
+    gap: 10px;
+  }
+  .image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .heading {
+    color: white;
+    font-weight: bolder;
+    font-size: 1rem;
+  }
+
+  .image-label {
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+  }
+
+  .header {
+    display: flex;
+    gap: 5rem;
+    margin: auto;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .container {
+    text-align: center;
+    margin: 20px;
+  }
+  .radio-buttons {
+    color: white;
+  }
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 300px);
+    gap: 10px;
+    justify-content: center;
+  }
+
+  @media (min-width: 600px) {
+    .image-grid {
+      grid-template-columns: repeat(2, 300px);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .image-grid {
+      grid-template-columns: repeat(4, 300px);
+    }
+  }
+  .selectable {
+    width: 300px;
+    height: 400px;
+    cursor: pointer;
+    transition: filter 0.3s;
+  }
+  .gray {
+    filter: grayscale(100%);
+  }
+  button {
+    padding: 10px 15px;
+    background-color: red;
+    border-radius: 0.3rem;
+    color: white;
+    border: none;
+    font-weight: bolder;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  #nxt-btn {
+    background-color: green;
+  }
+
+  #bk-btn {
+    background-color: blue;
+  }
+</style>
+{% endblock %}

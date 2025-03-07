@@ -97,11 +97,32 @@ def createHandFixTable():
     )
 
 
+def createFinalisedAngles():
+    # check if hand_fix table exists
+    cursor.execute(
+        """SELECT count(name) FROM sqlite_master WHERE type='table' AND name='finalised_angles'"""
+    )
+    if cursor.fetchone()[0] == 1:
+        print("Table exists.")
+        return
+
+    # Creating face_swap table
+    cursor.execute(
+        """CREATE TABLE finalised_angles (
+        finalised_angles_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    angle_id TEXT DEFAULT NULL,
+    image_name TEXT NOT NULL,
+    image_path TEXT NOT NULL)"""
+    )
+
+
 def createTables():
     createImageMainTable()
     createFirstPassTable()
     createFaceSwapTable()
     createHandFixTable()
+    createFinalisedAngles()
 
 
 print("Creating tables...")
