@@ -29,14 +29,14 @@ def getProductsProgress():
     return result
 
 
-def getProductsForAngleFiltering(prodcut_id, index):
+def getProductsForAngleFiltering(product_id, index):
 
     products = []
-    if prodcut_id:
-        products = findAllUnfilteredAnglesByProductId()
+    if product_id is not None and product_id != "null":
+        products = findAllUnfilteredAnglesByProductId(product_id)
         return products
 
-    if index:
+    if index is not None and index != "null":
         products = findAllUnfilteredAnglesByIndex(index)
         return products
 
@@ -90,3 +90,21 @@ def updateProductAngles(product_id, data):
     result = insertProductAngles(product_id, data)
 
     return result
+
+
+def getAllProductAnglesProgress():
+
+    products = findAllUnfilteredAngles()
+
+    grouped_data = defaultdict(lambda: {"count": 0, "status": "pending"})
+    for item in products:
+
+        if item["angle_id"] != None and item["angle_id"] != "":
+            grouped_data[item["product_id"]]["count"] += 1
+
+        if grouped_data[item["product_id"]]["count"] == 4:
+            grouped_data[item["product_id"]]["status"] = "completed"
+
+    # Convert defaultdict to a regular dictionary
+
+    return grouped_data

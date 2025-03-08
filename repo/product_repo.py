@@ -104,11 +104,65 @@ def findAllUnfilteredAnglesByIndex(index):
 
     conn.close()
 
-    return [dict(product) for product in products]
+    return {
+        "data": [dict(product) for product in products],
+        "metadata": {"index": index},
+    }
 
 
-def findAllUnfilteredAnglesByProductId():
-    return []
+def findAllUnfilteredAnglesByProductId(product_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """SELECT * FROM finalised_angles 
+    WHERE product_id = ?
+    AND image_name != '1.JPG'""",
+        (product_id,),
+    )
+
+    products = cursor.fetchall()
+    conn.close()
+
+    metadata = unfilteredProductAnglesMetadata(product_id)
+
+    return {"data": [dict(product) for product in products], "metadata": metadata}
+
+
+def unfilteredProductAnglesMetadata(product_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """SELECT product_id FROM finalised_angles 
+    WHERE image_name != '1.JPG' 
+    GROUP BY product_id 
+    ORDER BY finalised_angles_id """
+    )
+
+    product_ids = cursor.fetchall()
+    product_ids = [item[0] for item in product_ids]
+
+    index = product_ids.index(product_id)
+
+    # cursor.execute(
+    #     """
+    #     SELECT COUNT(*)
+    #     FROM (
+    #         SELECT product_id
+    #         FROM finalised_angles
+    #         WHERE image_name != '1.JPG'
+    #         GROUP BY product_id
+    #         ORDER BY finalised_angles_id
+    #     ) subquery
+    #     WHERE product_id != ?;
+    #     """,
+    #     (product_id,),
+    # )
+    conn.close()
+
+    return {"index": index}
 
 
 def insertProductAngles(product_id, data: list):

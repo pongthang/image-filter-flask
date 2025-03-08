@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, send_from_directory
 
+from services.product_service import getAllProductAnglesProgress
+
 main_bp = Blueprint("main", __name__)
 IMAGE_FOLDER = "../shoot/"
 
@@ -18,3 +20,11 @@ def get_image(foldername, filename):
 @main_bp.route("/finalise-angles")
 def finaliseAngles():
     return render_template("finalise_angles.html")
+
+
+@main_bp.route("/angles-progress")
+def angles_progress():
+    # This would typically come from your API call
+    products = getAllProductAnglesProgress()
+
+    return render_template("angles_progress.html", products=products)

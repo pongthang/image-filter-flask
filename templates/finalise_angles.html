@@ -1,7 +1,12 @@
 {% extends "base.html" %} {% block content %}
 <div class="container">
   <div class="header">
-    <div class="heading" id="product-id"></div>
+    <div class="title">
+      <div class="heading" id="product-id"></div>
+      <a href="/angles-progress">
+        <button id="pro-btn">Check Progress</button>
+      </a>
+    </div>
     <div class="radio-buttons">
       <label><input type="radio" name="angle" value="1" checked /> Front</label>
       <label><input type="radio" name="angle" value="2" /> Side</label>
@@ -39,30 +44,35 @@
   document.addEventListener("DOMContentLoaded", function () {
     let selectedImages = {};
     let productData = [];
+    let currentIndex;
 
     function fetchImages() {
       const params = new URLSearchParams(window.location.search);
       const value = params.get("index"); // Replace 'key' with your parameter name
+      const product_id = params.get("product_id");
 
-      if (value === null) {
+      if (value === null && product_id === null) {
         //update url params
         window.history.pushState({}, "", `?index=0`);
         window.location.reload();
       }
 
-      fetch(`api/products/finalise-product?index=${value}`)
+      fetch(
+        `api/products/finalise-product?index=${value}&product_id=${product_id}`
+      )
         .then((response) => response.json())
         .then((data) => {
-          productData = data;
+          productData = data.data;
+          currentIndex = data.metadata.index;
           let imageGrid = document.getElementById("image-grid");
           imageGrid.innerHTML = "";
 
           let productHeading = document.getElementById("product-id");
           // Extract product_id from the first image
-          const productId = data[0]?.product_id || "Unknown";
+          const productId = data.data[0]?.product_id || "Unknown";
           productHeading.innerText = `Product ID: ${productId}`;
 
-          data.forEach((image) => {
+          data.data.forEach((image) => {
             let imageContainer = document.createElement("div");
             imageContainer.classList.add("image-container");
 
@@ -183,7 +193,11 @@
       console.log("Navigating to the next product");
       // Navigate to the next product
       const params = new URLSearchParams(window.location.search);
-      const value = params.get("index");
+      let value = params.get("index");
+
+      if (value === null) {
+        value = currentIndex;
+      }
 
       window.history.pushState({}, "", `?index=${parseInt(value) + 1}`);
       window.location.reload();
@@ -207,6 +221,12 @@
   });
 </script>
 <style>
+  .title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .action-grp {
     display: flex;
     gap: 10px;
@@ -269,7 +289,7 @@
     transition: filter 0.3s;
   }
   .gray {
-    filter: grayscale(100%);
+    filter: grayscale(200%);
   }
   button {
     padding: 10px 15px;
@@ -288,6 +308,9 @@
 
   #bk-btn {
     background-color: blue;
+  }
+  #pro-btn {
+    background-color: orange;
   }
 </style>
 {% endblock %}

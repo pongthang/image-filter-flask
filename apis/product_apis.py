@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from services.product_service import (
     bulkInsertFinaliseAngleFromFolder,
+    getAllProductAnglesProgress,
     getProductsForAngleFiltering,
     getProductsProgress,
     updateProductAngles,
@@ -55,5 +56,13 @@ def postProductAngles():
     data = request.get_json()
 
     products = updateProductAngles(product_id, data)
+
+    return jsonify(products)
+
+
+@product_api.route("/finalise-products-progress", methods=["GET"])
+def productAnglesProgress():
+    """Returns all products with their associated files"""
+    products = getAllProductAnglesProgress()
 
     return jsonify(products)

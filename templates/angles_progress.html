@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Status Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .pending {
+        background-color: red !important;
+        background: red !important;
+        color: white !important;
+        font-weight: bold !important;
+      }
+      .completed {
+        background-color: green !important;
+        color: white !important;
+        font-weight: bold !important;
+      }
+      .failed {
+        background-color: #f8d7da;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4">Product Status Dashboard</h1>
+
+      <table class="table table-bordered">
+        <thead class="table-dark">
+          <tr>
+            <th>Product Name</th>
+            <th>Status</th>
+            <th>No. of Angles Marked</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product_id, product_data in products.items() %}
+          <tr class="{{ product_data.status }}">
+            <td>
+              <a href="/finalise-angles?product_id={{ product_id }}"
+                >{{ product_id }}</a
+              >
+            </td>
+
+            {% if product_data.status == 'pending' %}
+            <td class="pending">{{ product_data.status|capitalize }}</td>
+            {% else %}
+            <td class="completed">{{ product_data.status|capitalize }}</td>
+            {% endif %}
+
+            <td>{{ product_data.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
