@@ -1,5 +1,5 @@
 # service layer
-
+import shutil
 from collections import defaultdict
 
 from repo.product_repo import (
@@ -8,6 +8,7 @@ from repo.product_repo import (
     findAllUnfilteredAngles,
     findAllUnfilteredAnglesByIndex,
     findAllUnfilteredAnglesByProductId,
+    insertImageMain,
     insertProductAngles,
 )
 
@@ -108,3 +109,81 @@ def getAllProductAnglesProgress():
     # Convert defaultdict to a regular dictionary
 
     return grouped_data
+
+
+def createAndInsertImageMain():
+    # copy valid files from ../shoot folder into the ../finalised-angles folder
+    # the valid image is decided by the finalised-angle table where for each product
+    # we check which files have been assigned angle
+    # check ../finalised-angle folder and add its images and data to the image-main table
+
+    folderPath = "../finalised_angles"
+
+    if not os.path.isdir(folderPath):
+        return "no directory found to copy the files in : contact admin"
+
+    try:
+        allFiles = (
+            findAllUnfilteredAngles()
+        )  # This function needs to be defined elsewhere
+    except Exception as e:
+        return f"Error retrieving angle data: {str(e)}"
+
+    imageMainEntries = []
+    processed_count = 0
+
+    for i in allFiles:
+        # Skip if angle_id is None or empty
+        if i["angle_id"] is None or i["angle_id"] == "":
+            continue
+
+        subcategory_path = os.path.join(folderPath, i["sub_category"])
+        product_path = os.path.join(subcategory_path, i["product_sku_number"])
+
+        # Create directories if they don't exist
+        os.makedirs(product_path, exist_ok=True)
+
+        # Define source and destination file paths
+        source_file = os.path.join("../shoot", i["product_sku_number"], i["image_name"])
+
+        dest_file = os.path.join(
+            product_path, f"{i['product_sku_number']}_{i['angle_id']}.jpg"
+        )
+
+        # Skip if destination file already exists
+        if os.path.isfile(dest_file):
+            continue
+
+        # Check if source file exists
+        if not os.path.isfile(source_file):
+            print(f"Warning: Source file not found: {source_file}")
+            continue
+
+        try:
+            # Use shutil.copy2 instead of os.system for better error handling and preservation of metadata
+
+            shutil.copy2(source_file, dest_file)
+
+            # Prepare data for image_main table
+            imageMainEntries.append(
+                {
+                    "sub_category": i["sub_category"],
+                    "product_sku_number": i["product_sku_number"],
+                    "angle_id": i["angle_id"],
+                    "file_path": dest_file,
+                }
+            )
+
+            processed_count += 1
+
+        except Exception as e:
+            print(f"Error copying {source_file} to {dest_file}: {str(e)}")
+
+    # TODO: Add code to insert imageMainEntries into the database
+    # For example:
+    # insert_into_image_main_table(imageMainEntries)
+
+    if processed_count == 0:
+        return "No new files were processed"
+
+    return f"Processed {processed_count} files. Database entries prepared but not inserted."

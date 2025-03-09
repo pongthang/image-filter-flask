@@ -117,12 +117,34 @@ def createFinalisedAngles():
     )
 
 
+def createProductsTable():
+
+    cursor.execute(
+        """SELECT count(name) FROM sqlite_master WHERE type='table' AND name='products'"""
+    )
+    if cursor.fetchone()[0] == 1:
+        print("Table exists.")
+        return
+
+    cursor.execute(
+        """ CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_sku_number TEXT UNIQUE NOT NULL,
+    brand TEXT NOT NULL,
+    type TEXT NOT NULL,
+    sub_category TEXT NOT NULL,
+    product_type TEXT NOT NULL
+    );"""
+    )
+
+
 def createTables():
     createImageMainTable()
     createFirstPassTable()
     createFaceSwapTable()
     createHandFixTable()
     createFinalisedAngles()
+    createProductsTable()
 
 
 print("Creating tables...")

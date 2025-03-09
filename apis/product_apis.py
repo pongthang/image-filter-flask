@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from services.product_service import (
     bulkInsertFinaliseAngleFromFolder,
+    createAndInsertImageMain,
     getAllProductAnglesProgress,
     getProductsForAngleFiltering,
     getProductsProgress,
@@ -66,3 +67,14 @@ def productAnglesProgress():
     products = getAllProductAnglesProgress()
 
     return jsonify(products)
+
+
+@product_api.route("/bulk-insert/image-main", methods=["GET"])
+def bulkInsertImageMain():
+    """Returns all products with their associated files"""
+    # copy valid files from ../shoot folder into the ../finalised-angles folder
+    # the valid image is decided by he finalised-angle table where for each product we check which files have been assigned angle
+    # check ../finalised-angle folder and add its images and data to the image-main table
+    response = createAndInsertImageMain()
+
+    return response

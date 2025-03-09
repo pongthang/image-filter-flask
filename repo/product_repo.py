@@ -39,7 +39,11 @@ def findAllUnfilteredAngles():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""SELECT * FROM finalised_angles where image_name!='1.JPG' """)
+    cursor.execute(
+        """select * from finalised_angles fa 
+    left join products p on fa.product_id = p.product_sku_number
+    where image_name!='1.JPG0' """
+    )
     products = cursor.fetchall()
     conn.close()
 
@@ -188,3 +192,13 @@ def insertProductAngles(product_id, data: list):
     connection.close()
 
     return len(data)
+
+
+def insertImageMain(data):
+
+    conn = get_db_connection()
+    curr = conn.cursor()
+
+    curr.execute(""" Insert INTO image_main ()  """)
+
+    return 0
