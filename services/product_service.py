@@ -150,13 +150,21 @@ def createAndInsertImageMain():
             product_path, f"{i['product_sku_number']}_{i['angle_id']}.jpg"
         )
 
-        # Skip if destination file already exists
-        if os.path.isfile(dest_file):
-            continue
+        imageMainEntries.append(
+            {
+                "product_id": i["product_sku_number"],
+                "angle_id": i["angle_id"],
+                "image_path": dest_file,
+            }
+        )
 
         # Check if source file exists
         if not os.path.isfile(source_file):
             print(f"Warning: Source file not found: {source_file}")
+            continue
+
+        # Skip if destination file already exists
+        if os.path.isfile(dest_file):
             continue
 
         try:
@@ -165,15 +173,6 @@ def createAndInsertImageMain():
             shutil.copy2(source_file, dest_file)
 
             # Prepare data for image_main table
-            imageMainEntries.append(
-                {
-                    "sub_category": i["sub_category"],
-                    "product_sku_number": i["product_sku_number"],
-                    "angle_id": i["angle_id"],
-                    "file_path": dest_file,
-                }
-            )
-
             processed_count += 1
 
         except Exception as e:
@@ -182,6 +181,8 @@ def createAndInsertImageMain():
     # TODO: Add code to insert imageMainEntries into the database
     # For example:
     # insert_into_image_main_table(imageMainEntries)
+    print("image entries going inside", imageMainEntries)
+    insertImageMain(imageMainEntries)
 
     if processed_count == 0:
         return "No new files were processed"

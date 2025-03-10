@@ -199,6 +199,18 @@ def insertImageMain(data):
     conn = get_db_connection()
     curr = conn.cursor()
 
-    curr.execute(""" Insert INTO image_main ()  """)
+    # convert list of objects to list of lists
+    data = [list(item.values()) for item in data]
 
-    return 0
+    # execute the query
+    curr.executemany(
+        """INSERT INTO image_main (product_id, angle_id, image_path) VALUES (?, ?, ?)""",
+        data,
+    )
+
+    # get the count of rows inserted
+    count = curr.rowcount
+    conn.commit()
+    conn.close()
+
+    return count
