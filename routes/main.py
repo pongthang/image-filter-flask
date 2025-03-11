@@ -69,3 +69,8 @@ def angles_progress():
     products = getAllProductAnglesProgress()
 
     return render_template("angles_progress.html", products=products)
+
+
+@main_bp.route('/filter-images')
+def compare_images():
+    return render_template('firstpass_filter.html')

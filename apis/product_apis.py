@@ -78,3 +78,27 @@ def bulkInsertImageMain():
     response = createAndInsertImageMain()
 
     return response
+
+
+@product_api.route("/firstpass-filter", methods=["GET"])
+def get_images():
+    # This would be replaced with your actual data source
+    # Example API response matching your required structure
+    return jsonify({
+        "orignal_image_path": "static/images/5715512990538/5715512990538_1.JPG",
+        "product_id": "P12345",
+        "new_images": [
+            {
+                "name": "Generated 1",
+                "path": "static/images/5715512990538/5715512990538_1.JPG"
+            },
+            {
+                "name": "Generated 2",
+                "path": "static/images/5715512990538/5715512990538_1.JPG"
+            },
+            {
+                "name": "Generated 3",
+                "path": "static/images/5715512990538/5715512990538_1.JPG"
+            }
+        ]
+    })
