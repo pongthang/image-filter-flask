@@ -321,3 +321,17 @@ def update_image_main(step, product_id, angle_id):
     conn.close()
 
     return count
+
+
+def find_filtered_facefix():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""Select * from face_swap where face_swap_score=1""")
+
+    images = cursor.fetchall()
+    conn.commit()
+    conn.close()
+
+    return [dict(product) for product in images]

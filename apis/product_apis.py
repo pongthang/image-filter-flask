@@ -1,8 +1,10 @@
 from collections import defaultdict
 import os
+import shutil
 from flask import Blueprint, jsonify, request
 
 from repo.product_repo import (
+    find_filtered_facefix,
     findFaceSwapImagesByIndexAndAngleId,
     findFaceSwapImagesByProductIdAndAngleId,
     insertImageSwapEntries,
@@ -230,3 +232,25 @@ def update_face_swap_entries():
         update_image_main("facefix", product_id, angle)
 
     return jsonify({"data": data})
+
+
+@product_api.route("/move-facefix-images", methods=["GET"])
+def move_face_fix():
+
+    chosen_files = find_filtered_facefix()
+
+    # copy the files to the facefix folder using the image_path
+    for f in chosen_files:
+        print(f["image_path"])
+        # create a folder in ../facefix with name = product_id
+        print(f["product_id"])
+        path = os.path.join("../facefix", f["product_id"])
+        if os.path.exists(path) == False:
+            os.mkdir(path)
+
+        if os.path.exists(f["image_path"]):
+            shutil.copy(f["image_path"], os.path.join(path, f["image_name"]))
+        else:
+            print("File not found for path", f["image_path"])
+
+    return jsonify({"data": chosen_files})
