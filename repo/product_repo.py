@@ -214,3 +214,110 @@ def insertImageMain(data):
     conn.close()
 
     return count
+
+
+def insertImageSwapEntries(images):
+    conn = get_db_connection()
+    curr = conn.cursor()
+
+    # convert list of objects to list of lists
+    data = [list(item.values()) for item in images]
+    print(data)
+
+    # dublicate check on image_name
+    curr.executemany(
+        """Insert or REPLACE INTO face_swap (product_id,angle_id, image_name, image_path ) VALUES (?, ?, ?, ?)""",
+        data,
+    )
+
+    count = curr.rowcount
+    conn.commit()
+    conn.close()
+
+    return int(count)
+
+
+def update_face_swap(data):
+
+    conn = get_db_connection()
+    curr = conn.cursor()
+
+    # convert list of objects to list of lists
+    data = [list(item.values()) for item in data]
+    print(data)
+
+    # dublicate check on image_name
+    curr.executemany(
+        """UPDATE face_swap SET face_swap_score=? WHERE image_name = ?""",
+        data,
+    )
+
+    count = curr.rowcount
+    conn.commit()
+    conn.close()
+
+    return int(count)
+
+
+def findFaceSwapImagesByProductIdAndAngleId(product_id, angle_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """SELECT * FROM face_swap 
+    WHERE product_id = ? AND angle_id = ?""",
+        (product_id, angle_id),
+    )
+
+    products = cursor.fetchall()
+    conn.close()
+
+    return [dict(product) for product in products]
+
+
+def findFaceSwapImagesByIndexAndAngleId(index, angle_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """SELECT product_id FROM face_swap fs
+    GROUP BY product_id
+    ORDER BY face_swap_id
+    LIMIT 1 OFFSET ?;""",
+        (index,),
+    )
+    product_id = cursor.fetchone()
+
+    if product_id is None:
+        return []
+
+    cursor.execute(
+        """SELECT * FROM face_swap 
+    WHERE product_id = ? AND angle_id = ?""",
+        (product_id[0], angle_id),
+    )
+
+    products = cursor.fetchall()
+    conn.close()
+
+    return [dict(product) for product in products]
+
+
+def update_image_main(step, product_id, angle_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if step == "facefix":
+
+        cursor.execute(
+            """UPDATE image_main SET face_swap_status="DONE" WHERE product_id=? AND angle_id = ?""",
+            (product_id, angle_id),
+        )
+
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return count

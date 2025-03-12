@@ -1,5 +1,14 @@
+from collections import defaultdict
+import os
 from flask import Blueprint, jsonify, request
 
+from repo.product_repo import (
+    findFaceSwapImagesByIndexAndAngleId,
+    findFaceSwapImagesByProductIdAndAngleId,
+    insertImageSwapEntries,
+    update_face_swap,
+    update_image_main,
+)
 from services.product_service import (
     bulkInsertFinaliseAngleFromFolder,
     createAndInsertImageMain,
@@ -80,25 +89,144 @@ def bulkInsertImageMain():
     return response
 
 
-@product_api.route("/firstpass-filter", methods=["GET"])
-def get_images():
+@product_api.route("/firstpass-filter/<angle>", methods=["GET"])
+def get_images(angle):
+
+    product_id = request.args.get("product_id")
+    index = request.args.get("index")
     # This would be replaced with your actual data source
     # Example API response matching your required structure
-    return jsonify({
-        "orignal_image_path": "static/images/5715512990538/5715512990538_1.JPG",
-        "product_id": "P12345",
-        "new_images": [
-            {
-                "name": "Generated 1",
-                "path": "static/images/5715512990538/5715512990538_1.JPG"
-            },
-            {
-                "name": "Generated 2",
-                "path": "static/images/5715512990538/5715512990538_1.JPG"
-            },
-            {
-                "name": "Generated 3",
-                "path": "static/images/5715512990538/5715512990538_1.JPG"
-            }
-        ]
-    })
+    # folder_name = "../output/Intune Men Wears"
+    # if not os.path.exists(folder_name):
+    #     return jsonify({"error": "Folder not found"}), 404
+
+    # if product_id is not None and product_id != "null":
+    #     folder_name = os.path.join(folder_name, product_id)
+    #     index = os.listdir(folder_name).index(product_id)
+
+    # if (
+    #     (product_id is None or product_id == "null")
+    #     and index is not None
+    #     and index != "null"
+    # ):
+    #     p = os.listdir(folder_name)[int(index)]
+    #     folder_name = os.path.join(folder_name, p)
+
+    product_arr = []
+    if product_id is not None and product_id != "null":
+        products = findFaceSwapImagesByProductIdAndAngleId(product_id, angle)
+        product_arr = products
+
+    if index is not None and index != "null":
+        products = findFaceSwapImagesByIndexAndAngleId(index, angle)
+        product_arr = products
+
+    product_id = product_arr[0]["product_id"]
+
+    return jsonify(
+        {
+            "new_images": product_arr,
+            "product_id": product_id,
+            "index": index,
+            "original_image": "../finalised_angles/Intune Men Wears/"
+            + product_id
+            + "/"
+            + product_id
+            + "_"
+            + angle
+            + ".jpg",
+        }
+    )
+
+    # images = []
+    # print(folder_name)
+    # for idx, file_name in enumerate(os.listdir(folder_name), start=1):
+
+    #     if (
+    #         file_name.lower().endswith((".png", ".jpg", ".jpeg"))
+    #         and file_name.split("_")[2] == angle
+    #     ):
+    #         images.append(
+    #             {
+    #                 "name": file_name,
+    #                 "path": os.path.join(folder_name, file_name),
+    #                 "link": file_name.split("_")[0] + "/",
+    #             }
+    #         )
+
+    # product_id = folder_name.split("/")[-1]
+
+    # return jsonify(
+    #     {
+    #         "product_id": product_id,
+    #         "original_image": "../finalised_angles/Intune Men Wears/"
+    #         + product_id
+    #         + "/"
+    #         + product_id
+    #         + "_"
+    #         + angle
+    #         + ".jpg",
+    #         "new_images": images,
+    #         "index": index,
+    #     }
+    # )
+
+
+@product_api.route("/add-face-swap-entires", methods=["GET"])
+def add_face_swap_entries():
+
+    folder_name = "../output/Intune Men Wears"
+
+    images = []
+    print(folder_name)
+    for idx, product_folder in enumerate(os.listdir(folder_name), start=1):
+        for idx, file_name in enumerate(
+            os.listdir(os.path.join(folder_name, product_folder)), start=1
+        ):
+
+            images.append(
+                {
+                    "product_id": product_folder,
+                    "angle_id": file_name.split("_")[2],
+                    "image_name": file_name,
+                    "image_path": os.path.join(folder_name, product_folder, file_name),
+                }
+            )
+
+    count = insertImageSwapEntries(images)
+
+    return jsonify(
+        {
+            "count": count,
+            "new_images": images,
+        }
+    )
+
+
+@product_api.route("/update-face-swap-entry", methods=["POST"])
+def update_face_swap_entries():
+
+    images = request.get_json()
+
+    data = []
+    to_update_image_main = False
+
+    for i in images["evaluations"]:
+        d = {
+            "face_swap_score": 1 if i["evaluations"]["faceGood"] else 0,
+            "image_name": i["image_name"],
+        }
+
+        if d["face_swap_score"] == 1:
+            to_update_image_main = True
+
+        data.append(d)
+
+    update_face_swap(data)
+    if to_update_image_main:
+        product_id = images["productId"]
+        angle = images["angle"]
+
+        update_image_main("facefix", product_id, angle)
+
+    return jsonify({"data": data})

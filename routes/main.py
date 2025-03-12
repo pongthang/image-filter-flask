@@ -6,7 +6,7 @@ from PIL import Image, ImageOps
 import io
 
 main_bp = Blueprint("main", __name__)
-IMAGE_FOLDER = "../shoot/"
+IMAGE_FOLDER = "../"
 
 
 @main_bp.route("/")
@@ -14,16 +14,27 @@ def home():
     return render_template("product_progress.html")
 
 
-@main_bp.route("/shoot/<foldername>/<filename>")
-def get_image(foldername, filename):
+@main_bp.route("/<parentfolder>/<category>/<foldername>/<filename>")
+def get_image(parentfolder, category, foldername, filename):
 
     # Path to the image
-    image_path = IMAGE_FOLDER + foldername + "/" + filename
+    image_path = (
+        IMAGE_FOLDER + parentfolder + "/" + category + "/" + foldername + "/" + filename
+    )
 
     # Open the image
     with Image.open(image_path) as img:
         # Resize image (optional)
-        image_path = IMAGE_FOLDER + foldername + "/" + filename
+        image_path = (
+            IMAGE_FOLDER
+            + parentfolder
+            + "/"
+            + category
+            + "/"
+            + foldername
+            + "/"
+            + filename
+        )
 
     # Open the image
     with Image.open(image_path) as img:
@@ -71,6 +82,6 @@ def angles_progress():
     return render_template("angles_progress.html", products=products)
 
 
-@main_bp.route('/filter-images')
+@main_bp.route("/filter-images")
 def compare_images():
-    return render_template('firstpass_filter.html')
+    return render_template("firstpass_filter.html")

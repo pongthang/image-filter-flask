@@ -21,7 +21,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 1000px;
+        /* height: 1000px; */
         width: 100%;
       }
       .image-container img {
@@ -46,6 +46,9 @@
         margin-top: 20px;
         display: flex;
         justify-content: space-between;
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-bottom: 10px;
       }
       .image-label {
         text-align: center;
@@ -69,9 +72,33 @@
         align-items: start;
       }
 
+      @media screen and (max-width: 768px) {
+        .image-row {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+
       .container-main {
         width: 100%;
         padding: 10px;
+      }
+      .angle-selector {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+      }
+      .angle-selector .form-check {
+        display: inline-block;
+        margin-right: 20px;
+      }
+
+      .btn-status {
+        background-color: red;
+        color: white;
+        font-weight: bolder;
       }
     </style>
   </head>
@@ -82,21 +109,75 @@
         <h3 id="product-id">Product ID: Loading...</h3>
       </div>
 
+      <div class="angle-selector">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angleFront"
+            value="1"
+            checked
+          />
+          <label class="form-check-label" for="angleFront">Front</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angleSide"
+            value="2"
+          />
+          <label class="form-check-label" for="angleSide">Side</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angleBack"
+            value="3"
+          />
+          <label class="form-check-label" for="angleBack">Back</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angleFull"
+            value="4"
+          />
+          <label class="form-check-label" for="angleFull">Full</label>
+        </div>
+      </div>
+
       <form id="comparison-form">
+        <div class="navigation-buttons">
+          <div>
+            <span>
+              <a href="/"> Main Menue</a>
+            </span>
+            <span> Status:</span>
+            <button type="button" id="status-btn" class="btn btn-status">
+              NOT DONE
+            </button>
+          </div>
+          <div>
+            <button type="button" id="back-button" class="btn btn-secondary">
+              Previous Product
+            </button>
+            <button type="button" id="submit-button" class="btn btn-success">
+              Submit Evaluation
+            </button>
+            <button type="button" id="next-button" class="btn btn-primary">
+              Next Product
+            </button>
+          </div>
+        </div>
         <div id="image-comparison-container">
           <!-- Images and checkboxes will be loaded here -->
-        </div>
-
-        <div class="navigation-buttons">
-          <button type="button" id="back-button" class="btn btn-secondary">
-            Previous Product
-          </button>
-          <button type="button" id="submit-button" class="btn btn-success">
-            Submit Evaluation
-          </button>
-          <button type="button" id="next-button" class="btn btn-primary">
-            Next Product
-          </button>
         </div>
       </form>
     </div>
@@ -105,12 +186,34 @@
       // Current product data
       let currentProduct = null;
 
+      let currentIndex;
+      let angle = 1;
+      let angleStatus = "NOT DONE";
+
       // Fetch data from API
       async function fetchProductData(productIndex = 0) {
         try {
           // Replace with your actual API endpoint
-          const response = await fetch(`/api/products/firstpass-filter`);
+          const params = new URLSearchParams(window.location.search);
+          const value = params.get("index"); // Replace 'key' with your parameter name
+          const product_id = params.get("product_id");
+          // const angle = window.pathname.split("/")[-1];
+
+          if (value === null && product_id === null) {
+            //update url params
+            window.history.pushState({}, "", `?index=0`);
+            window.location.reload();
+          }
+
+          // if (angle === null) {
+          //   angle = 1;
+          // }
+
+          const response = await fetch(
+            `/api/products/firstpass-filter/${angle}?index=${value}&product_id=${product_id}`
+          );
           currentProduct = await response.json();
+          currentIndex = currentProduct.index;
           renderProductImages();
           document.getElementById(
             "product-id"
@@ -135,61 +238,72 @@
         const container = document.getElementById("image-comparison-container");
         container.innerHTML = "";
 
+        angleStatus = "NOT DONE";
         // For each new image, create a row with original + new image
         currentProduct.new_images.forEach((newImage, index) => {
+          console.log(newImage.path);
+
+          if (newImage.face_swap_score > 0) {
+            angleStatus = "DONE";
+          }
+
+          document.getElementById("status-btn").textContent = angleStatus;
+
           const rowElement = document.createElement("div");
           rowElement.className = "comparison-row";
           rowElement.innerHTML = `
-                    <div class="image-label">Comparison ${index + 1}: ${
-            newImage.name
+                      <div class="image-label">Comparison ${index + 1}: ${
+            newImage.image_name
           }</div>
-                    <div class="image-row">
-                        <div class="col">
-                            <div class="image-container">
-                                <img src="${
-                                  currentProduct.orignal_image_path
-                                }" alt="Original Image" class="img-fluid">
-                            </div>
-                            <div class="text-center"><strong>Original Image</strong></div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="image-container">
-                                <img src="${newImage.path}" alt="${
-            newImage.name
-          }" class="img-fluid">
-                            </div>
-                            <div class="text-center"><strong>${
-                              newImage.name
-                            }</strong></div>
+                      <div class="image-row">
+                          <div class="col">
+                              <div class="image-container">
+                                  <img src="${
+                                    currentProduct.original_image
+                                  }" alt="Original Image" class="img-fluid">
+                              </div>
+                              <div class="text-center"><strong>Original Image</strong></div>
+                          </div>
 
-                        </div>
-        <div class="checkbox-container">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="cloth-good-${index}" name="cloth-good-${index}">
-                            <label class="form-check-label" for="cloth-good-${index}">Cloth Good</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hair-good-${index}" name="hair-good-${index}">
-                            <label class="form-check-label" for="hair-good-${index}">Hair Good</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hand-good-${index}" name="hand-good-${index}">
-                            <label class="form-check-label" for="hand-good-${index}">Hand Good</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="face-good-${index}" name="face-good-${index}">
-                            <label class="form-check-label" for="face-good-${index}">Face Good</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="upscale-good-${index}" name="upscale-good-${index}">
-                            <label class="form-check-label" for="upscale-good-${index}">Upscale Good</label>
-                        </div>
-                    </div>
+                          <div class="col-md-6">
+                              <div class="image-container">
+                                  <img src="${newImage.image_path}" alt="${
+            newImage.image_name
+          }" class="img-fluid ">
+                              </div>
+                              <div class="text-center"><strong>${
+                                newImage.image_name
+                              }</strong></div>
 
-                    </div>
-            
-                `;
+                          </div>
+          <div class="checkbox-container">
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="cloth-good-${index}" name="cloth-good-${index}">
+                              <label class="form-check-label" for="cloth-good-${index}">Cloth Good</label>
+                          </div>
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="hair-good-${index}" name="hair-good-${index}">
+                              <label class="form-check-label" for="hair-good-${index}">Hair Good</label>
+                          </div>
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="hand-good-${index}" name="hand-good-${index}">
+                              <label class="form-check-label" for="hand-good-${index}">Hand Good</label>
+                          </div>
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="face-good-${index}" name="face-good-${index}" ${
+            newImage.face_swap_score > 0 ? "checked" : ""
+          }>
+                              <label class="form-check-label" for="face-good-${index}">Face Good</label>
+                          </div>
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="upscale-good-${index}" name="upscale-good-${index}">
+                              <label class="form-check-label" for="upscale-good-${index}">Upscale Good</label>
+                          </div>
+                      </div>
+
+                      </div>
+
+                  `;
           container.appendChild(rowElement);
 
           // If it's not the last item, add a separator
@@ -212,7 +326,7 @@
 
         currentProduct.new_images.forEach((newImage, index) => {
           evaluations.push({
-            imageName: newImage.name,
+            image_name: newImage.image_name,
             evaluations: {
               clothGood: document.getElementById(`cloth-good-${index}`).checked,
               hairGood: document.getElementById(`hair-good-${index}`).checked,
@@ -226,6 +340,7 @@
 
         return {
           productId: currentProduct.product_id,
+          angle: angle,
           evaluations: evaluations,
         };
       }
@@ -283,7 +398,7 @@
         if (!evaluationData) return;
 
         // Send data to server (replace with your actual endpoint)
-        fetch("/api/submit-evaluations", {
+        fetch("/api/products/update-face-swap-entry", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -293,6 +408,7 @@
           .then((response) => response.json())
           .then((data) => {
             alert("Evaluation submitted successfully!");
+            fetchProductData(currentIndex);
             // Optionally redirect to next product or reset
           })
           .catch((error) => {
@@ -301,31 +417,56 @@
           });
       }
 
-      // Current product index for navigation
-      let currentProductIndex = 0;
-
       // Navigation event handlers
       document.getElementById("next-button").addEventListener("click", () => {
         saveCheckboxStates();
-        currentProductIndex++;
-        fetchProductData(currentProductIndex);
+        console.log("Navigating to the next product");
+        // Navigate to the next product
+        const params = new URLSearchParams(window.location.search);
+        let value = params.get("index");
+
+        if (value === null) {
+          value = currentIndex;
+        }
+
+        window.history.pushState({}, "", `?index=${parseInt(value) + 1}`);
+        window.location.reload();
+        fetchProductData(currentIndex);
       });
 
       document.getElementById("back-button").addEventListener("click", () => {
         saveCheckboxStates();
-        if (currentProductIndex > 0) {
-          currentProductIndex--;
-          fetchProductData(currentProductIndex);
+
+        console.log("Navigating to the next product");
+        // Navigate to the next product
+        const params = new URLSearchParams(window.location.search);
+        const value = params.get("index");
+
+        if (parseInt(value) === 0) {
+          return;
         }
+
+        window.history.pushState({}, "", `?index=${parseInt(value) - 1}`);
+        window.location.reload();
       });
 
       document
         .getElementById("submit-button")
         .addEventListener("click", handleSubmit);
 
+      // Add event listener for angle selection
+      document
+        .querySelectorAll('input[name="angleSelect"]')
+        .forEach((radio) => {
+          radio.addEventListener("change", function () {
+            angle = parseInt(this.value);
+            fetchProductData();
+          });
+        });
+
       // Initialize the page
       document.addEventListener("DOMContentLoaded", () => {
-        fetchProductData(currentProductIndex);
+        fetchProductData(currentIndex);
       });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
