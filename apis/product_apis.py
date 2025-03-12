@@ -189,7 +189,7 @@ def add_face_swap_entries():
             images.append(
                 {
                     "product_id": product_folder,
-                    "angle_id": file_name.split("_")[2],
+                    "angle_id": file_name.split("_")[-3],
                     "image_name": file_name,
                     "image_path": os.path.join(folder_name, product_folder, file_name),
                 }
