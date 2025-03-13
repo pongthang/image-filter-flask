@@ -115,38 +115,38 @@
             class="form-check-input"
             type="radio"
             name="angleSelect"
-            id="angleFront"
+            id="angle1"
             value="1"
             checked
           />
-          <label class="form-check-label" for="angleFront">Front</label>
+          <label class="form-check-label" for="angle1">Front</label>
         </div>
         <div class="form-check">
           <input
             class="form-check-input"
             type="radio"
             name="angleSelect"
-            id="angleSide"
+            id="angle2"
             value="2"
           />
-          <label class="form-check-label" for="angleSide">Side</label>
+          <label class="form-check-label" for="angle2">Side</label>
         </div>
         <div class="form-check">
           <input
             class="form-check-input"
             type="radio"
             name="angleSelect"
-            id="angleBack"
+            id="angle3"
             value="3"
           />
-          <label class="form-check-label" for="angleBack">Back</label>
+          <label class="form-check-label" for="angle3">Back</label>
         </div>
         <div class="form-check">
           <input
             class="form-check-input"
             type="radio"
             name="angleSelect"
-            id="angleFull"
+            id="angle4"
             value="4"
           />
           <label class="form-check-label" for="angleFull">Full</label>
@@ -189,6 +189,25 @@
       let currentIndex;
       let angle = 1;
       let angleStatus = "NOT DONE";
+
+      function showCustomAlert(message) {
+        const alertBox = document.createElement("div");
+        alertBox.textContent = message;
+        alertBox.style.position = "fixed";
+        alertBox.style.top = "20px";
+        alertBox.style.left = "90%";
+        alertBox.style.transform = "translateX(-50%)";
+        alertBox.style.background = "gray";
+        alertBox.style.color = "white";
+        alertBox.style.padding = "10px 20px";
+        alertBox.style.borderRadius = "5px";
+        alertBox.style.zIndex = "9999";
+        document.body.appendChild(alertBox);
+
+        setTimeout(() => {
+          alertBox.remove();
+        }, 2000); // Disappears after 2 seconds
+      }
 
       // Fetch data from API
       async function fetchProductData(productIndex = 0) {
@@ -275,7 +294,9 @@
                                 newImage.image_name
                               }</strong></div>
 
+                          
                           </div>
+                        <div>
           <div class="checkbox-container">
                           <div class="form-check">
                               <input class="form-check-input" type="checkbox" id="cloth-good-${index}" name="cloth-good-${index}">
@@ -299,6 +320,7 @@
                               <input class="form-check-input" type="checkbox" id="upscale-good-${index}" name="upscale-good-${index}">
                               <label class="form-check-label" for="upscale-good-${index}">Upscale Good</label>
                           </div>
+                      </div>                      
                       </div>
 
                       </div>
@@ -407,7 +429,13 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            alert("Evaluation submitted successfully!");
+            showCustomAlert("Evaluation submitted successfully!");
+            // alert("Evaluation submitted successfully!");
+            if (angle < 4) {
+              //toogle the correct radio button
+              angle = angle + 1;
+              document.getElementById(`angle${angle}`).checked = true;
+            }
             fetchProductData(currentIndex);
             // Optionally redirect to next product or reset
           })
