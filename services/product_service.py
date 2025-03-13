@@ -25,7 +25,11 @@ def getProductsProgress():
         grouped_data[item["product_id"]].append(item)
 
     # Convert defaultdict to a regular dictionary
-    result = [{"id": pid, "images": images} for pid, images in grouped_data.items()]
+    result = [
+        {"index": i, "id": pid, "images": images}
+        for i, (pid, images) in enumerate(grouped_data.items())
+    ]
+    # result = [{"id": pid, "images": images} for pid, images in grouped_data.items()]
 
     return result
 

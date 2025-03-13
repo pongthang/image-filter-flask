@@ -19,7 +19,7 @@ def findAll():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""SELECT * FROM image_main""")
+    cursor.execute("""SELECT * FROM image_main ORDER BY id""")
     products = cursor.fetchall()
     conn.close()
 

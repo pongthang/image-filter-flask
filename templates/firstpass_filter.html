@@ -72,6 +72,12 @@
         align-items: start;
       }
 
+      .image-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
       @media screen and (max-width: 768px) {
         .image-row {
           flex-direction: column;
@@ -84,11 +90,13 @@
         padding: 10px;
       }
       .angle-selector {
+        display: flex;
         margin: 20px 0;
         padding: 15px;
         background-color: #f8f9fa;
         border-radius: 4px;
         border: 1px solid #dee2e6;
+        align-items: center;
       }
       .angle-selector .form-check {
         display: inline-block;
@@ -99,6 +107,22 @@
         background-color: red;
         color: white;
         font-weight: bolder;
+      }
+
+      .show-selected {
+        background-color: blue;
+        color: white;
+      }
+
+      .hide {
+        display: none;
+      }
+
+      .selected-image-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
       }
     </style>
   </head>
@@ -151,6 +175,12 @@
           />
           <label class="form-check-label" for="angleFull">Full</label>
         </div>
+
+        <div>
+          <button type="button" id="show-selected" class="btn show-selected">
+            Show Selected
+          </button>
+        </div>
       </div>
 
       <form id="comparison-form">
@@ -176,6 +206,9 @@
             </button>
           </div>
         </div>
+        <div id="selected-image-container" class="hide">
+          <!-- Selected images will show here on toogle -->
+        </div>
         <div id="image-comparison-container">
           <!-- Images and checkboxes will be loaded here -->
         </div>
@@ -189,6 +222,7 @@
       let currentIndex;
       let angle = 1;
       let angleStatus = "NOT DONE";
+      let selectedImages = [];
 
       function showCustomAlert(message) {
         const alertBox = document.createElement("div");
@@ -244,6 +278,37 @@
         }
       }
 
+      function renderSelectedImages() {
+        console.log("selected Images ", selectedImages);
+        if (selectedImages.length === 0) {
+          return;
+        }
+
+        const container = document.getElementById("selected-image-container");
+        container.innerHTML = "";
+        const rowElement = document.createElement("div");
+        rowElement.className = "selected-element";
+        rowElement.innerHTML = `
+             <div class="image-label">Selected Images</div>
+             <div class="selected-image-row">
+             ${selectedImages
+               .map((newImage, index) => {
+                 return `
+               <div class="image-col">
+                 <div class="">
+                   <img src="${newImage.image_path}" alt="${newImage.image_name}" class="img-fluid ">
+                 </div>
+                 <div class="text-center"><strong>${newImage.image_name}</strong></div>
+               </div>
+               `;
+               })
+               .join("")}
+             </div>
+           `;
+
+        container.append(rowElement);
+      }
+
       // Render all images for the current product
       function renderProductImages() {
         if (
@@ -271,61 +336,61 @@
           const rowElement = document.createElement("div");
           rowElement.className = "comparison-row";
           rowElement.innerHTML = `
-                      <div class="image-label">Comparison ${index + 1}: ${
+                         <div class="image-label">Comparison ${index + 1}: ${
             newImage.image_name
           }</div>
-                      <div class="image-row">
-                          <div class="col">
-                              <div class="image-container">
-                                  <img src="${
-                                    currentProduct.original_image
-                                  }" alt="Original Image" class="img-fluid">
-                              </div>
-                              <div class="text-center"><strong>Original Image</strong></div>
-                          </div>
+                         <div class="image-row">
+                             <div class="col">
+                                 <div class="image-container">
+                                     <img src="${
+                                       currentProduct.original_image
+                                     }" alt="Original Image" class="img-fluid">
+                                 </div>
+                                 <div class="text-center"><strong>Original Image</strong></div>
+                             </div>
 
-                          <div class="col-md-6">
-                              <div class="image-container">
-                                  <img src="${newImage.image_path}" alt="${
+                             <div class="col-md-6">
+                                 <div class="image-container">
+                                     <img src="${newImage.image_path}" alt="${
             newImage.image_name
           }" class="img-fluid ">
-                              </div>
-                              <div class="text-center"><strong>${
-                                newImage.image_name
-                              }</strong></div>
+                                 </div>
+                                 <div class="text-center"><strong>${
+                                   newImage.image_name
+                                 }</strong></div>
 
-                          
-                          </div>
-                        <div>
-          <div class="checkbox-container">
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="cloth-good-${index}" name="cloth-good-${index}">
-                              <label class="form-check-label" for="cloth-good-${index}">Cloth Good</label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="hair-good-${index}" name="hair-good-${index}">
-                              <label class="form-check-label" for="hair-good-${index}">Hair Good</label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="hand-good-${index}" name="hand-good-${index}">
-                              <label class="form-check-label" for="hand-good-${index}">Hand Good</label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="face-good-${index}" name="face-good-${index}" ${
+
+                             </div>
+                           <div>
+             <div class="checkbox-container">
+                             <div class="form-check">
+                                 <input class="form-check-input" type="checkbox" id="cloth-good-${index}" name="cloth-good-${index}">
+                                 <label class="form-check-label" for="cloth-good-${index}">Cloth Good</label>
+                             </div>
+                             <div class="form-check">
+                                 <input class="form-check-input" type="checkbox" id="hair-good-${index}" name="hair-good-${index}">
+                                 <label class="form-check-label" for="hair-good-${index}">Hair Good</label>
+                             </div>
+                             <div class="form-check">
+                                 <input class="form-check-input" type="checkbox" id="hand-good-${index}" name="hand-good-${index}">
+                                 <label class="form-check-label" for="hand-good-${index}">Hand Good</label>
+                             </div>
+                             <div class="form-check">
+                                 <input class="form-check-input" type="checkbox" id="face-good-${index}" name="face-good-${index}" ${
             newImage.face_swap_score > 0 ? "checked" : ""
           }>
-                              <label class="form-check-label" for="face-good-${index}">Face Good</label>
-                          </div>
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="upscale-good-${index}" name="upscale-good-${index}">
-                              <label class="form-check-label" for="upscale-good-${index}">Upscale Good</label>
-                          </div>
-                      </div>                      
-                      </div>
+                                 <label class="form-check-label" for="face-good-${index}">Face Good</label>
+                             </div>
+                             <div class="form-check">
+                                 <input class="form-check-input" type="checkbox" id="upscale-good-${index}" name="upscale-good-${index}">
+                                 <label class="form-check-label" for="upscale-good-${index}">Upscale Good</label>
+                             </div>
+                         </div>
+                         </div>
 
-                      </div>
+                         </div>
 
-                  `;
+                     `;
           container.appendChild(rowElement);
 
           // If it's not the last item, add a separator
@@ -437,6 +502,7 @@
               document.getElementById(`angle${angle}`).checked = true;
             }
             fetchProductData(currentIndex);
+            getSelectedImages();
             // Optionally redirect to next product or reset
           })
           .catch((error) => {
@@ -490,6 +556,35 @@
             angle = parseInt(this.value);
             fetchProductData();
           });
+        });
+
+      async function getSelectedImages() {
+        selectedImages = [];
+        for (let i = 1; i < 5; i++) {
+          console.log("Fetching selected images for angle ", i);
+          res = await fetch(
+            `/api/products/firstpass-filter/${i}?index=${currentIndex}&product_id=${currentProduct.product_id}`
+          );
+
+          angleImage = await res.json();
+          angleImage.new_images.forEach((newImage, index) => {
+            if (newImage.face_swap_score > 0) {
+              selectedImages.push(newImage);
+            }
+          });
+        }
+
+        renderSelectedImages();
+      }
+
+      document
+        .getElementById("show-selected")
+        .addEventListener("click", async () => {
+          await getSelectedImages();
+          //make the image hide on next click
+          document
+            .getElementById("selected-image-container")
+            .classList.toggle("hide");
         });
 
       // Initialize the page
