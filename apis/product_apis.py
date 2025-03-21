@@ -130,13 +130,7 @@ def get_images(angle):
             "new_images": product_arr,
             "product_id": product_id,
             "index": index,
-            "original_image": "../finalised_angles/Intune Men Wears/"
-            + product_id
-            + "/"
-            + product_id
-            + "_"
-            + angle
-            + ".jpg",
+            "original_image": product_arr[0]["original_image_path"],
         }
     )
 
