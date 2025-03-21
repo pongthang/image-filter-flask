@@ -295,7 +295,7 @@ def findFaceSwapImagesByIndexAndAngleId(index, angle_id):
     cursor.execute(
         """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.face_swap_score, fa.image_path as original_image_path 
 FROM face_swap fs
-LEFT JOIN finalised_angles fa ON fs.product_id = fa.product_id
+LEFT JOIN finalised_angles fa ON fs.product_id = fa.product_id AND fs.angle_id = fa.angle_id
 WHERE fs.product_id = ? AND fs.angle_id = ?;""",
         (product_id[0], angle_id),
     )
