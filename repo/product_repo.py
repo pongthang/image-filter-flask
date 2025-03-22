@@ -264,8 +264,10 @@ def findFaceSwapImagesByProductIdAndAngleId(product_id, angle_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """SELECT * FROM face_swap 
-    WHERE product_id = ? AND angle_id = ?""",
+        """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.face_swap_score, fa.image_path as original_image_path 
+FROM face_swap fs
+LEFT JOIN finalised_angles fa ON fs.product_id = fa.product_id AND fs.angle_id = fa.angle_id
+WHERE fs.product_id = ? AND fs.angle_id = ?""",
         (product_id, angle_id),
     )
 
