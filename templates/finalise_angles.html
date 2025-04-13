@@ -12,16 +12,18 @@
       <label><input type="radio" name="angle" value="2" /> Side</label>
       <label><input type="radio" name="angle" value="3" /> Back</label>
       <label><input type="radio" name="angle" value="4" /> Full</label>
+      <label><input type="radio" name="angle" value="5" /> Detail</label>
     </div>
     <div class="action-grp">
       <button id="submit-btn">Submit</button>
-      <button id="nxt-btn">Next</button>
       <button id="bk-btn">Back</button>
+      <button id="nxt-btn">Next</button>
     </div>
   </div>
   <div class="image-grid" id="image-grid"></div>
 </div>
 <script>
+  const $ = (x) => document.querySelector(x)
   function showCustomAlert(message) {
     const alertBox = document.createElement("div");
     alertBox.textContent = message;
@@ -45,6 +47,13 @@
     let selectedImages = {};
     let productData = [];
     let currentIndex;
+    let angleMap = {
+      "1": "Front",
+      "2": "Side",
+      "3": "Back",
+      "4": "Full",
+      "5": "Detail",
+    }
 
     function fetchImages() {
       const params = new URLSearchParams(window.location.search);
@@ -75,6 +84,9 @@
           data.data.forEach((image) => {
             let imageContainer = document.createElement("div");
             imageContainer.classList.add("image-container");
+	    const remainingWidth = $('.container').offsetWidth - (parseInt(getComputedStyle($('.header')).margin) * 2)
+	    const numCols = 8
+            imageContainer.style.width = `${Math.floor(remainingWidth/numCols)-Math.ceil(10 * (numCols - 1) /numCols)}px`
 
             let imageLabel = document.createElement("div");
             imageLabel.classList.add("image-label");
@@ -96,7 +108,7 @@
             if (image.angle_id !== null) {
               const angleValue = image.angle_id.toString();
               selectedImages[angleValue] = image.image_path;
-              imageLabel.innerText = `Angle ${angleValue}`;
+              imageLabel.innerText = `${angleMap[angleValue]}`;
               imgElement.classList.add("gray");
             }
 
@@ -122,7 +134,7 @@
               }
 
               selectedImages[currentAngle] = this.getAttribute("data-id");
-              imageLabel.innerText = `Angle ${currentAngle}`;
+              imageLabel.innerText = `${angleMap[currentAngle]}`;
               this.classList.add("gray");
 
               // Select the next radio button if available
@@ -199,6 +211,9 @@
         value = currentIndex;
       }
 
+      // Select front angle
+      document.querySelector('.radio-buttons label input[value="1"]').click()
+
       window.history.pushState({}, "", `?index=${parseInt(value) + 1}`);
       window.location.reload();
     });
@@ -221,6 +236,10 @@
   });
 </script>
 <style>
+  body {
+    box-sizing: border-box;
+    height: 100vh;
+  }
   .title {
     display: flex;
     flex-direction: column;
@@ -252,25 +271,37 @@
   .header {
     display: flex;
     gap: 5rem;
-    margin: auto;
+    margin: 20px;
     justify-content: center;
     align-items: center;
     margin-bottom: 20px;
   }
   .container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     text-align: center;
-    margin: 20px;
   }
   .radio-buttons {
     color: white;
   }
   .image-grid {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+    row-gap: 10px;
+    justify-content: center;
+    flex-grow: 1;
+    align-content: start;
+    /*
     display: grid;
     grid-template-columns: repeat(4, 300px);
     gap: 10px;
     justify-content: center;
+    */
   }
 
+  /*
   @media (min-width: 600px) {
     .image-grid {
       grid-template-columns: repeat(2, 300px);
@@ -282,14 +313,19 @@
       grid-template-columns: repeat(4, 300px);
     }
   }
+  */
+
   .selectable {
-    width: 300px;
-    height: 400px;
+    width: 100%;
     cursor: pointer;
-    transition: filter 0.3s;
+    transition: all 0.3s;
+    opacity: 0.5;
+    border: 4px solid transparent;
   }
   .gray {
-    filter: grayscale(200%);
+    /* filter: grayscale(200%); */
+    opacity: 1;
+    border: 3px solid red;
   }
   button {
     padding: 10px 15px;

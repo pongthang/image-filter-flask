@@ -45,7 +45,7 @@ def getProductsForAngleFiltering(product_id, index):
         products = findAllUnfilteredAnglesByIndex(index)
         return products
 
-    products = findAllUnfilteredAngles()
+    products = findAllUnfilteredAngles(product_id)
 
     grouped_data = defaultdict(list)
     for item in products:
@@ -76,6 +76,7 @@ def bulkInsertFinaliseAngleFromFolder(directory_path):
                                 "angle_id": None,  # Set appropriate angle_id if needed
                                 "image_name": image_name,
                                 "image_path": image_path,
+                                "project_id": 5,
                             }
                         )
 
@@ -99,7 +100,8 @@ def updateProductAngles(product_id, data):
 
 def getAllProductAnglesProgress():
 
-    products = findAllUnfilteredAngles()
+    project_id = 1
+    products = findAllUnfilteredAngles(project_id)
 
     grouped_data = defaultdict(lambda: {"count": 0, "status": "pending"})
     for item in products:
@@ -107,7 +109,7 @@ def getAllProductAnglesProgress():
         if item["angle_id"] != None and item["angle_id"] != "":
             grouped_data[item["product_id"]]["count"] += 1
 
-        if grouped_data[item["product_id"]]["count"] == 4:
+        if grouped_data[item["product_id"]]["count"] == 5:
             grouped_data[item["product_id"]]["status"] = "completed"
 
     # Convert defaultdict to a regular dictionary
@@ -115,7 +117,7 @@ def getAllProductAnglesProgress():
     return grouped_data
 
 
-def createAndInsertImageMain():
+def createAndInsertImageMain(project_id, export_detail=False):
     # copy valid files from ../shoot folder into the ../finalised-angles folder
     # the valid image is decided by the finalised-angle table where for each product
     # we check which files have been assigned angle
@@ -127,10 +129,11 @@ def createAndInsertImageMain():
         return "no directory found to copy the files in : contact admin"
 
     try:
-        allFiles = (
-            findAllUnfilteredAngles()
+        allFiles = findAllUnfilteredAngles(
+            project_id
         )  # This function needs to be defined elsewhere
     except Exception as e:
+        print(f"Error retrieving angle data: {str(e)}")
         return f"Error retrieving angle data: {str(e)}"
 
     imageMainEntries = []
@@ -141,7 +144,12 @@ def createAndInsertImageMain():
         if i["angle_id"] is None or i["angle_id"] == "":
             continue
 
-        subcategory_path = os.path.join(folderPath, i["sub_category"])
+        print("HIII", i)
+        if export_detail and (i["angle_id"] != "5" and i["angle_id"] != "2"):
+            continue
+
+        project_folder = os.path.join(folderPath, "project_" + str(i["project_id"]))
+        subcategory_path = os.path.join(project_folder, i["sub_category"])
         product_path = os.path.join(subcategory_path, i["product_sku_number"])
 
         # Create directories if they don't exist

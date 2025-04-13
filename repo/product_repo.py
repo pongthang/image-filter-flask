@@ -26,7 +26,7 @@ def findAll():
     return [dict(product) for product in products]
 
 
-def findAllUnfilteredAngles():
+def findAllUnfilteredAngles(project_id):
     """
     Fetches all product progress from the database.
 
@@ -42,7 +42,7 @@ def findAllUnfilteredAngles():
     cursor.execute(
         """select * from finalised_angles fa 
     left join products p on fa.product_id = p.product_sku_number
-    where image_name!='1.JPG0' """
+    where image_name!='1.JPG0' AND fa.project_id ==?""", str(project_id)
     )
     products = cursor.fetchall()
     conn.close()
@@ -64,12 +64,12 @@ def bulkInsertImageDataInFinaliseAngle(data):
     cursor = connection.cursor()
 
     insert_query = """
-    INSERT INTO finalised_angles (product_id, angle_id, image_name, image_path)
-    VALUES (?, ?, ?, ?)
+    INSERT OR IGNORE INTO finalised_angles (product_id, angle_id, image_name, image_path, project_id)
+    VALUES (?, ?, ?, ?, ?)
     """
 
     values = [
-        (item["product_id"], item["angle_id"], item["image_name"], item["image_path"])
+        (item["product_id"], item["angle_id"], item["image_name"], item["image_path"], item["project_id"])
         for item in data
     ]
 
@@ -204,7 +204,7 @@ def insertImageMain(data):
 
     # execute the query
     curr.executemany(
-        """INSERT INTO image_main (product_id, angle_id, image_path) VALUES (?, ?, ?)""",
+        """INSERT OR IGNORE INTO image_main (product_id, angle_id, image_path) VALUES (?, ?, ?)""",
         data,
     )
 
@@ -226,7 +226,7 @@ def insertImageSwapEntries(images):
 
     # dublicate check on image_name
     curr.executemany(
-        """Insert or REPLACE INTO face_swap (product_id,angle_id, image_name, image_path ) VALUES (?, ?, ?, ?)""",
+        """Insert INTO face_swap (product_id,angle_id, image_name, image_path, lora_id) VALUES (?, ?, ?, ?, ?)""",
         data,
     )
 
@@ -248,7 +248,7 @@ def update_face_swap(data):
 
     # dublicate check on image_name
     curr.executemany(
-        """UPDATE face_swap SET face_swap_score=? WHERE image_name = ?""",
+        """UPDATE face_swap SET face_swap_score=?, need_edit= ? WHERE image_name = ?""",
         data,
     )
 
@@ -259,16 +259,16 @@ def update_face_swap(data):
     return int(count)
 
 
-def findFaceSwapImagesByProductIdAndAngleId(product_id, angle_id):
+def findFaceSwapImagesByProductIdAndAngleId(product_id, angle_id, lora_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.face_swap_score, fa.image_path as original_image_path 
+        """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.need_edit, fs.face_swap_score, fa.image_path as original_image_path 
 FROM face_swap fs
 LEFT JOIN finalised_angles fa ON fs.product_id = fa.product_id AND fs.angle_id = fa.angle_id
-WHERE fs.product_id = ? AND fs.angle_id = ?""",
-        (product_id, angle_id),
+WHERE fs.product_id = ? AND fs.angle_id = ? AND fs.lora_id=?""",
+        (product_id, angle_id, lora_id),
     )
 
     products = cursor.fetchall()
@@ -277,7 +277,7 @@ WHERE fs.product_id = ? AND fs.angle_id = ?""",
     return [dict(product) for product in products]
 
 
-def findFaceSwapImagesByIndexAndAngleId(index, angle_id):
+def findFaceSwapImagesByIndexAndAngleId(index, angle_id, lora_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -291,15 +291,17 @@ def findFaceSwapImagesByIndexAndAngleId(index, angle_id):
     )
     product_id = cursor.fetchone()
 
+
+
     if product_id is None:
         return []
 
     cursor.execute(
-        """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.face_swap_score, fa.image_path as original_image_path 
+        """SELECT fs.product_id, fs.angle_id, fs.image_name, fs.image_path, fs.face_swap_score, fs.need_edit,  fa.image_path as original_image_path 
 FROM face_swap fs
 LEFT JOIN finalised_angles fa ON fs.product_id = fa.product_id AND fs.angle_id = fa.angle_id
-WHERE fs.product_id = ? AND fs.angle_id = ?;""",
-        (product_id[0], angle_id),
+WHERE fs.product_id = ? AND fs.angle_id = ? AND fs.lora_id=?;""",
+        (product_id[0], angle_id, lora_id),
     )
 
     products = cursor.fetchall()
@@ -327,15 +329,37 @@ def update_image_main(step, product_id, angle_id):
     return count
 
 
-def find_filtered_facefix():
+def find_filtered_facefix(project_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""Select * from face_swap where face_swap_score=1""")
+    cursor.execute("""Select * from face_swap fs left join finalised_angles fa on fs.product_id=fa.product_id and fs.angle_id=fa.angle_id where face_swap_score=1 and project_id=?""", (str(project_id),))
 
     images = cursor.fetchall()
     conn.commit()
     conn.close()
 
     return [dict(product) for product in images]
+
+
+def project_id_by_product_id(product_id):
+    """
+    Fetches the project ID associated with a given product ID.
+
+    Args:
+        product_id (str): The product ID to search for.
+
+    Returns:
+        str: The project ID associated with the product ID.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """SELECT project_id FROM finalised_angles WHERE product_id = ?""",
+        (product_id,),
+    )
+    project_id = cursor.fetchone()
+    conn.close()
+
+    return project_id[0] if project_id else None

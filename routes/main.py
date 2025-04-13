@@ -42,9 +42,9 @@ def get_image(parentfolder, category, foldername, filename):
         img = ImageOps.exif_transpose(img)
 
         # Resize image (optional)
-        max_width = 800
-        max_height = 800
-        img.thumbnail((max_width, max_height))
+        # max_width = 800
+        # max_height = 800
+        # img.thumbnail((max_width, max_height))
 
         # Compress the image based on its format
         img_io = io.BytesIO()
@@ -85,3 +85,21 @@ def angles_progress():
 @main_bp.route("/filter-images")
 def compare_images():
     return render_template("firstpass_filter.html")
+
+
+@main_bp.route("/edit-image")
+def edit_image_page():
+    # You might want to pass the product_id or index from the request args
+    # to the template if needed for initial setup, but the JS currently handles it.
+    # product_id = request.args.get('product_id')
+    # index = request.args.get('index')
+    return render_template("image_correction.html")  # Pass variables if needed
+
+
+@main_bp.route("/edit-image2")
+def edit_image_page2():
+    # You might want to pass the product_id or index from the request args
+    # to the template if needed for initial setup, but the JS currently handles it.
+    # product_id = request.args.get('product_id')
+    # index = request.args.get('index')
+    return render_template("image_edit.html")  # Pass variables if needed

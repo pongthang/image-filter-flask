@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Comparison</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .comparison-row {
+        margin-bottom: 30px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .image-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* height: 1000px; */
+        width: 100%;
+      }
+      .image-container img {
+        max-width: 100%;
+        max-height: 1000px;
+        object-fit: contain;
+      }
+      .checkbox-container {
+        display: flex;
+        flex-direction: column;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+      }
+      .form-check {
+        margin-right: 15px;
+        display: inline-block;
+      }
+      .navigation-buttons {
+        padding-top: 15px;
+        display: flex;
+        justify-content: space-between;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 15px;
+        position: sticky;
+        top: 0;
+        background: white;
+      }
+      .image-label {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .separator {
+        height: 1px;
+        background-color: #dee2e6;
+        margin: 20px 0;
+      }
+
+      .image-row {
+        display: flex;
+        align-items: start;
+      }
+
+      .image-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      @media screen and (max-width: 768px) {
+        .image-row {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+
+      .container-main {
+        width: 100%;
+        padding: 10px;
+      }
+      .angle-selector {
+        display: flex;
+        margin: 20px 0;
+        margin-bottom: 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        align-items: center;
+      }
+      .angle-selector .form-check {
+        display: inline-block;
+        margin-right: 20px;
+      }
+
+      .btn-status {
+        background-color: red;
+        color: white;
+        font-weight: bolder;
+      }
+
+      .show-selected {
+        background-color: blue;
+        color: white;
+      }
+
+      .hide {
+        display: none;
+      }
+
+      .selected-image-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-main">
+      <div class="product-header">
+        <h1 class="mb-0">Image Comparison</h1>
+        <h3 id="product-id">Product ID: Loading...</h3>
+      </div>
+
+      <div class="angle-selector">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle1"
+            value="1"
+            checked
+          />
+          <label class="form-check-label" for="angle1">Front</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle2"
+            value="2"
+          />
+          <label class="form-check-label" for="angle2">Side</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle3"
+            value="3"
+          />
+          <label class="form-check-label" for="angle3">Back</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle4"
+            value="4"
+          />
+          <label class="form-check-label" for="angleFull">Full</label>
+        </div>
+
+        <div>
+          <button type="button" id="show-selected" class="btn show-selected">
+            Show Selected
+          </button>
+          <button type="button" id="product-status" class="btn show-selected">
+            Not done
+          </button>
+        </div>
+      </div>
+
+      <form id="comparison-form">
+        <div class="navigation-buttons">
+          <div>
+            <span>
+              <a href="/"> Main Menue</a>
+            </span>
+            <span> Status:</span>
+            <button type="button" id="status-btn" class="btn btn-status">
+              NOT DONE
+            </button>
+          </div>
+          <div>
+            <button type="button" id="back-button" class="btn btn-secondary">
+              Previous Product
+            </button>
+            <button type="button" id="submit-button" class="btn btn-success">
+              Submit Evaluation
+            </button>
+            <button type="button" id="next-button" class="btn btn-primary">
+              Next Product
+            </button>
+          </div>
+        </div>
+        <div id="selected-image-container" class="hide">
+          <!-- Selected images will show here on toogle -->
+        </div>
+        <div id="image-edit-container">
+          <!-- Images and checkboxes will be loaded here -->
+        </div>
+      </form>
+
+      <div class="card card-body bg-light mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Editing Mode:</h5>
+          <div class="btn-group" role="group">
+            <button id="erase-mode" class="btn btn-primary active">
+              Erase (Ctrl+E)
+            </button>
+            <button id="pan-zoom-mode" class="btn btn-secondary">
+              Pan & Zoom (Ctrl+P)
+            </button>
+          </div>
+          <div>
+            <button
+              id="zoom-in"
+              class="btn btn-sm btn-outline-dark"
+              title="Zoom In"
+            >
+              <i class="bi bi-zoom-in"></i> +
+            </button>
+            <button
+              id="zoom-out"
+              class="btn btn-sm btn-outline-dark"
+              title="Zoom Out"
+            >
+              <i class="bi bi-zoom-out"></i> -
+            </button>
+            <button
+              id="reset-view"
+              class="btn btn-sm btn-outline-dark"
+              title="Reset View"
+            >
+              <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </button>
+          </div>
+        </div>
+        <div class="mt-2">
+          <small class="text-muted"
+            >Current Mode: <span id="current-mode">Erase</span></small
+          >
+          <span class="ms-3"
+            >Zoom Level: <span id="zoom-level">100%</span></span
+          >
+        </div>
+      </div>
+
+      <div class="angle-selector card card-body bg-light mb-3">
+        <h5>Select Angle:</h5>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle1"
+            value="1"
+            checked
+          />
+          <label class="form-check-label" for="angle1">Front</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle2"
+            value="2"
+          />
+          <label class="form-check-label" for="angle2">Side</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle3"
+            value="3"
+          />
+          <label class="form-check-label" for="angle3">Back</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle4"
+            value="4"
+          />
+          <label class="form-check-label" for="angle4">Full</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="angleSelect"
+            id="angle5"
+            value="5"
+          />
+          <label class="form-check-label" for="angle5">Detail</label>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Current product data
+      let currentProduct = null;
+
+      let currentIndex;
+      let angle = 1;
+      let angleStatus = "NOT DONE";
+      let selectedImages = [];
+
+      function showCustomAlert(message) {
+        const alertBox = document.createElement("div");
+        alertBox.textContent = message;
+        alertBox.style.position = "fixed";
+        alertBox.style.top = "20px";
+        alertBox.style.left = "90%";
+        alertBox.style.transform = "translateX(-50%)";
+        alertBox.style.background = "gray";
+        alertBox.style.color = "white";
+        alertBox.style.padding = "10px 20px";
+        alertBox.style.borderRadius = "5px";
+        alertBox.style.zIndex = "9999";
+        document.body.appendChild(alertBox);
+
+        setTimeout(() => {
+          alertBox.remove();
+        }, 2000); // Disappears after 2 seconds
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const lora_id = params.get("lora_id") || 0;
+      // Fetch data from API
+      async function fetchProductData(productIndex = 0) {
+        try {
+          // Replace with your actual API endpoint
+          const value = params.get("index"); // Replace 'key' with your parameter name
+          const product_id = params.get("product_id");
+          // const angle = window.pathname.split("/")[-1];
+
+          if (value === null && product_id === null) {
+            //update url params
+            window.history.pushState({}, "", `?index=0`);
+            window.location.reload();
+          }
+
+          // if (angle === null) {
+          //   angle = 1;
+          // }
+
+          const response = await fetch(
+            `/api/products/edit-image/${angle}?index=${value}&product_id=${product_id}&lora_id=${lora_id}`
+          );
+          currentProduct = await response.json();
+
+          console.log("currentProduct", currentProduct);
+
+          currentIndex = currentProduct.index;
+          renderProductImages();
+          // document.getElementById(
+          //   "product-id"
+          // ).textContent = `Product ID: ${currentProduct.product_id}`;
+        } catch (error) {
+          console.error("Error fetching product data:", error);
+          document.getElementById("image-comparison-container").innerHTML =
+            '<div class="alert alert-danger">Error loading images. Please try again later.</div>';
+        }
+      }
+
+      function renderSelectedImages() {
+        console.log("selected Images ", selectedImages);
+        if (selectedImages.length === 0) {
+          return;
+        }
+
+        const container = document.getElementById("selected-image-container");
+        container.innerHTML = "";
+        const rowElement = document.createElement("div");
+        rowElement.className = "selected-element";
+        rowElement.innerHTML = `
+                 <div class="image-label">Selected Images</div>
+                 <div class="selected-image-row">
+                 ${selectedImages
+                   .map((newImage, index) => {
+                     return `
+                   <div class="image-col">
+                     <div class="">
+                       <img src="${newImage.image_path}" alt="${newImage.image_name}" class="img-fluid ">
+                     </div>
+                     <div class="text-center"><strong>${newImage.image_name}</strong></div>
+                   </div>
+                   `;
+                   })
+                   .join("")}
+                 </div>
+               `;
+
+        container.append(rowElement);
+      }
+
+      // Render all images for the current product
+      function renderProductImages() {
+        angleStatus = "NOT DONE";
+        // For each new image, create a row with original +
+        const container = document.getElementById("image-edit-container");
+        container.innerHTML = ""; // Clear previous content
+        console.log("container is here", container);
+        container.innerHTML = `
+              <div class="card">
+        <div class="card-header">Editing Canvas</div>
+        <div class="card-body text-center">
+          <p><i>Image loading and editing canvas will appear here.</i></p>
+          <div
+            id="canvas-container"
+            style="
+              position: relative;
+              width: 1024px;
+              height: 1536px;
+              margin: auto;
+              border: 1px solid #ccc;
+              overflow: hidden;
+            "
+          >
+            <!-- The wrapper now contains both the canvas and the image -->
+            <div
+              id="canvas-wrapper"
+              style="
+                position: absolute;
+                width: 1024px;
+                height: 1536px;
+                transform-origin: 0 0;
+              "
+            >
+              <canvas
+                id="imageCanvas"
+                width="1024"
+                height="1536"
+                style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  z-index: 1;
+                  cursor: crosshair;
+                "
+              ></canvas>
+              <img
+                id="bottomImage"
+                style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 1024px;
+                  height: 1536px;
+                  z-index: 0;
+                  display: none;
+                "
+              />
+            </div>
+          </div>
+          <div class="mt-2">
+            <small class="text-muted" id="brush-size-control">
+              Brush Size:
+              <input type="range" id="brush-size" min="5" max="50" value="20" />
+              <span id="brush-size-value">20px</span>
+            </small>
+          </div>
+          <small class="text-muted mt-2 d-block">
+            Shortcuts: Ctrl+E = Erase Mode | Ctrl+P = Pan & Zoom Mode
+          </small>
+        </div>
+      </div>
+            `;
+
+        canvasMain();
+      }
+
+      // Handle form submission
+      function handleSubmit() {
+        const evaluationData = collectEvaluationData();
+
+        if (!evaluationData) return;
+
+        console.log("Submitting evaluation data:", evaluationData);
+
+        // Send data to server (replace with your actual endpoint)
+        fetch("/api/products/update-face-swap-entry", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(evaluationData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            showCustomAlert("Evaluation submitted successfully!");
+            // alert("Evaluation submitted successfully!");
+            if (angle < 4) {
+              //toogle the correct radio button
+              angle = angle + 1;
+              document.getElementById(`angle${angle}`).checked = true;
+            }
+            fetchProductData(currentIndex);
+            getSelectedImages();
+            // Optionally redirect to next product or reset
+          })
+          .catch((error) => {
+            console.error("Error submitting evaluation:", error);
+            alert("Error submitting evaluation. Please try again.");
+          });
+      }
+
+      // Navigation event handlers
+      document.getElementById("next-button").addEventListener("click", () => {
+        saveCheckboxStates();
+        console.log("Navigating to the next product");
+        // Navigate to the next product
+        const params = new URLSearchParams(window.location.search);
+        let value = params.get("index");
+        const show_selected = params.get("show_selected");
+
+        if (value === null) {
+          value = currentIndex;
+        }
+
+        window.history.pushState(
+          {},
+          "",
+          `?index=${
+            parseInt(value) + 1
+          }&lora_id=${lora_id}&show_selected=${show_selected}`
+        );
+        window.location.reload();
+        fetchProductData(currentIndex);
+      });
+
+      document.getElementById("back-button").addEventListener("click", () => {
+        saveCheckboxStates();
+
+        console.log("Navigating to the next product");
+        // Navigate to the next product
+        const params = new URLSearchParams(window.location.search);
+        const value = params.get("index");
+        const show_selected = params.get("show_selected");
+
+        if (parseInt(value) === 0) {
+          return;
+        }
+
+        window.history.pushState(
+          {},
+          "",
+          `?index=${parseInt(value) - 1}&show_selected=${show_selected}`
+        );
+        window.location.reload();
+      });
+
+      document
+        .getElementById("submit-button")
+        .addEventListener("click", handleSubmit);
+
+      // Add event listener for angle selection
+      document
+        .querySelectorAll('input[name="angleSelect"]')
+        .forEach((radio) => {
+          radio.addEventListener("change", function () {
+            angle = parseInt(this.value);
+            fetchProductData();
+          });
+        });
+
+      async function getSelectedImages() {
+        selectedImages = [];
+        for (let i = 1; i < 5; i++) {
+          console.log("Fetching selected images for angle ", i);
+          res = await fetch(
+            `/api/products/firstpass-filter/${i}?index=${currentIndex}&product_id=${currentProduct.product_id}&lora_id=${lora_id}`
+          );
+
+          angleImage = await res.json();
+          angleImage.new_images.forEach((newImage, index) => {
+            if (newImage.face_swap_score > 0) {
+              selectedImages.push(newImage);
+            }
+          });
+        }
+
+        if (selectedImages.length < 4) {
+          document.getElementById("product-status").textContent = "Not Done";
+        } else {
+          document.getElementById("product-status").textContent = "Done"; // document.getElementById("#product-status").innerHTML = "Done";
+        }
+
+        console.log(selectedImages);
+
+        renderSelectedImages();
+      }
+
+      document
+        .getElementById("show-selected")
+        .addEventListener("click", async () => {
+          await getSelectedImages();
+          //make the image hide on next click
+          document
+            .getElementById("selected-image-container")
+            .classList.toggle("hide");
+        });
+
+      // Initialize the page
+      document.addEventListener("DOMContentLoaded", async () => {
+        await fetchProductData(currentIndex);
+        // await getSelectedImages();
+        // const params = new URLSearchParams(window.location.search);
+        // const show_selected = +params.get("show_selected") || 0;
+        // if (show_selected) {
+        //   document
+        //     .getElementById("selected-image-container")
+        //     .classList.toggle("hide");
+        // }
+      });
+
+      const canvasMain = () => {
+        const canvas = document.getElementById("imageCanvas");
+        const ctx = canvas.getContext("2d");
+        const bottomImageEl = document.getElementById("bottomImage");
+        const productInfoEl = document.getElementById("product-info");
+        const saveButton = document.getElementById("submit-button");
+        // const undoButton = document.getElementById("undo-button");
+        const angleRadios = document.querySelectorAll(
+          'input[name="angleSelect"]'
+        );
+        const modelRadios = document.querySelectorAll(
+          'input[name="modelSelect"]'
+        );
+        const canvasContainer = document.getElementById("canvas-container");
+        const canvasWrapper = document.getElementById("canvas-wrapper");
+        const brushSizeInput = document.getElementById("brush-size");
+        const brushSizeValue = document.getElementById("brush-size-value");
+        const eraseModeBtn = document.getElementById("erase-mode");
+        const panZoomModeBtn = document.getElementById("pan-zoom-mode");
+        const currentModeDisplay = document.getElementById("current-mode");
+        const zoomInBtn = document.getElementById("zoom-in");
+        const zoomOutBtn = document.getElementById("zoom-out");
+        const resetViewBtn = document.getElementById("reset-view");
+        const zoomLevelDisplay = document.getElementById("zoom-level");
+        const brushSizeControl = document.getElementById("brush-size-control");
+
+        // Editor states
+        let isDrawing = false;
+        let isDragging = false;
+        let topImage = new Image();
+        let productId = null; // Or index
+        let currentAngle = "1"; // Default angle
+        let currentModel = "standard"; // Default model
+        let currentMode = "erase"; // Default mode: "erase" or "pan-zoom"
+        let projectId = null; // Placeholder for project ID if needed
+
+        // Zoom and pan state
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let startX = 0;
+        let startY = 0;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Brush settings
+        let brushSize = 20;
+
+        // Canvas state history for undo functionality
+        let canvasStateHistory = [];
+        let currentStateIndex = -1;
+
+        // --- 1. Fetch Product ID/Index from URL ---
+        productId = params.get("product_id") || params.get("index"); // Adapt as needed
+        const idType = params.get("product_id") ? "ID" : "Index";
+        // productInfoEl.textContent = `Product ${idType}: ${productId || "N/A"}`;
+
+        // --- 2. Function to Fetch and Load Images ---
+        async function loadImagesForAngle(angle) {
+          currentAngle = angle;
+          console.log(
+            `Loading images for Product: ${productId}, Angle: ${angle}, Model: ${currentModel}`
+          );
+          // !!! Replace with your actual API call !!!
+          // Example structure (assuming your API returns JSON with image URLs)
+          try {
+            // const response = await fetch(`/api/get-edit-images?product=${productId}&angle=${angle}&model=${currentModel}`);
+            // const data = await response.json();
+            // const imageUrlTop = data.top_image_url; // Replace with actual field names
+            // const imageUrlBottom = data.bottom_image_url; // Replace with actual field names
+
+            // --- Hardcoded URLs for testing ---
+            const imageUrlTop = currentProduct.face_swap_image.image_path; // Placeholder - replace
+            const imageUrlBottom = currentProduct.original_image.image_path; // Placeholder - replace
+            pro;
+
+            if (!imageUrlTop || !imageUrlBottom) {
+              throw new Error("Image URLs not found in API response.");
+            }
+            // --- End Hardcoded URLs ---
+
+            // Load bottom image directly into the img tag
+            bottomImageEl.src = imageUrlBottom;
+            bottomImageEl.style.display = "block"; // Make it visible
+
+            // Load top image for canvas drawing
+            topImage.onload = () => {
+              // Clear canvas and draw the top image initially
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.globalCompositeOperation = "source-over"; // Default drawing mode
+              ctx.drawImage(topImage, 0, 0, canvas.width, canvas.height);
+
+              // Reset zoom/pan when loading new images
+              resetView();
+
+              // Save initial state for undo
+              saveCanvasState();
+            };
+            topImage.onerror = () => {
+              console.error("Error loading top image.");
+              alert("Error loading the top image.");
+            };
+            topImage.src = imageUrlTop;
+          } catch (error) {
+            console.error("Error fetching images:", error);
+            alert(
+              `Failed to load images for angle ${angle}. Check console for details.`
+            );
+            // Clear canvas and hide bottom image on error
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            bottomImageEl.style.display = "none";
+            bottomImageEl.src = "";
+            topImage.src = "";
+          }
+        }
+
+        // --- 3. Mouse Position Calculation with Zoom/Pan Adjustments ---
+        function getMousePos(canvas, evt) {
+          const rect = canvasContainer.getBoundingClientRect();
+          // Calculate mouse position considering zoom and pan
+          return {
+            x: (evt.clientX - rect.left - offsetX) / scale,
+            y: (evt.clientY - rect.top - offsetY) / scale,
+          };
+        }
+
+        // --- 4. Save and Restore Canvas State ---
+        function saveCanvasState() {
+          // Get current canvas state
+          const newState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          // If we're not at the end of the history, remove future states
+          if (currentStateIndex < canvasStateHistory.length - 1) {
+            canvasStateHistory = canvasStateHistory.slice(
+              0,
+              currentStateIndex + 1
+            );
+          }
+
+          // Add the new state to history
+          canvasStateHistory.push(newState);
+          currentStateIndex = canvasStateHistory.length - 1;
+
+          // Enable/disable undo button
+          updateUndoButton();
+        }
+
+        function undo() {
+          if (currentStateIndex <= 0) {
+            return; // Nothing to undo
+          }
+
+          // Go back one state
+          currentStateIndex--;
+          const previousState = canvasStateHistory[currentStateIndex];
+          ctx.putImageData(previousState, 0, 0);
+
+          // Update undo button state
+          updateUndoButton();
+        }
+
+        function updateUndoButton() {
+          // Disable undo button if we're at the beginning of history
+          undoButton.disabled = currentStateIndex <= 0;
+        }
+
+        // --- 5. Eraser Tool Function ---
+        function erase(e) {
+          if (!isDrawing || currentMode !== "erase") return;
+          const pos = getMousePos(canvas, e);
+
+          // Set up eraser
+          ctx.globalCompositeOperation = "destination-out"; // This makes drawing erase
+          ctx.lineWidth = brushSize / scale; // Adjust brush size based on zoom level
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "rgba(0,0,0,1)"; // Color doesn't matter for destination-out
+
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          ctx.beginPath(); // Start a new path
+          ctx.moveTo(pos.x, pos.y);
+        }
+
+        // --- 6. Pan Function ---
+        function pan(e) {
+          if (!isDragging || currentMode !== "pan-zoom") return;
+
+          const dx = e.clientX - lastX;
+          const dy = e.clientY - lastY;
+
+          lastX = e.clientX;
+          lastY = e.clientY;
+
+          offsetX += dx;
+          offsetY += dy;
+
+          updateCanvasTransform();
+        }
+
+        // --- 7. Apply Zoom and Pan Transformations ---
+        function updateCanvasTransform() {
+          canvasWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+          zoomLevelDisplay.textContent = `${Math.round(scale * 100)}%`;
+
+          // Update brush size display to reflect effective size
+          brushSizeValue.textContent = `${brushSize}px (${Math.round(
+            brushSize / scale
+          )}px effective)`;
+
+          // Update cursor based on current mode
+          if (currentMode === "erase") {
+            canvas.style.cursor = "crosshair";
+          } else {
+            canvas.style.cursor = "move";
+          }
+        }
+
+        // --- 8. Zoom Functions ---
+        function zoomIn(zoomFactor = 1.2) {
+          const oldScale = scale;
+          scale = Math.min(scale * zoomFactor, 5); // Limit max zoom to 5x
+
+          // Adjust offset to zoom toward center of canvas container
+          const containerRect = canvasContainer.getBoundingClientRect();
+          const containerCenterX = containerRect.width / 2;
+          const containerCenterY = containerRect.height / 2;
+
+          // Calculate how much the offset should change to keep the center point fixed
+          offsetX =
+            (offsetX - containerCenterX) * (scale / oldScale) +
+            containerCenterX;
+          offsetY =
+            (offsetY - containerCenterY) * (scale / oldScale) +
+            containerCenterY;
+
+          updateCanvasTransform();
+        }
+
+        function zoomOut(zoomFactor = 1.2) {
+          const oldScale = scale;
+          scale = Math.max(scale / zoomFactor, 0.2); // Limit min zoom to 0.2x
+
+          // Adjust offset to zoom from center of canvas container
+          const containerRect = canvasContainer.getBoundingClientRect();
+          const containerCenterX = containerRect.width / 2;
+          const containerCenterY = containerRect.height / 2;
+
+          // Calculate how much the offset should change to keep the center point fixed
+          offsetX =
+            (offsetX - containerCenterX) * (scale / oldScale) +
+            containerCenterX;
+          offsetY =
+            (offsetY - containerCenterY) * (scale / oldScale) +
+            containerCenterY;
+
+          updateCanvasTransform();
+        }
+
+        function zoomAtPoint(x, y, factor) {
+          const oldScale = scale;
+
+          if (factor > 1) {
+            // Zoom in
+            scale = Math.min(scale * factor, 5); // Limit max zoom to 5x
+          } else {
+            // Zoom out
+            scale = Math.max(scale * factor, 0.2); // Limit min zoom to 0.2x
+          }
+
+          // Adjust offset to zoom toward mouse position
+          offsetX = (offsetX - x) * (scale / oldScale) + x;
+          offsetY = (offsetY - y) * (scale / oldScale) + y;
+
+          updateCanvasTransform();
+        }
+
+        function resetView() {
+          scale = 1;
+          offsetX = 0;
+          offsetY = 0;
+          updateCanvasTransform();
+        }
+
+        // --- 9. Mode Switching Function ---
+        function setMode(mode) {
+          currentMode = mode;
+          currentModeDisplay.textContent =
+            mode === "erase" ? "Erase" : "Pan & Zoom";
+
+          if (mode === "erase") {
+            eraseModeBtn.classList.add("active", "btn-primary");
+            eraseModeBtn.classList.remove("btn-secondary");
+            panZoomModeBtn.classList.remove("active", "btn-primary");
+            panZoomModeBtn.classList.add("btn-secondary");
+            canvas.style.cursor = "crosshair";
+            brushSizeControl.style.display = "block";
+          } else {
+            panZoomModeBtn.classList.add("active", "btn-primary");
+            panZoomModeBtn.classList.remove("btn-secondary");
+            eraseModeBtn.classList.remove("active", "btn-primary");
+            eraseModeBtn.classList.add("btn-secondary");
+            canvas.style.cursor = "move";
+            brushSizeControl.style.display = "none";
+          }
+        }
+
+        // --- 10. Mouse Event Handlers ---
+        canvas.addEventListener("mousedown", (e) => {
+          if (currentMode === "erase") {
+            isDrawing = true;
+            const pos = getMousePos(canvas, e);
+
+            // Save state before starting to draw
+            if (!isDrawing) {
+              saveCanvasState();
+            }
+
+            // Start a new path at the mouse position
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+
+            // Make a single dot at the start point
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.lineWidth = brushSize / scale;
+            ctx.lineCap = "round";
+            ctx.arc(pos.x, pos.y, brushSize / scale / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+          } else if (currentMode === "pan-zoom") {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = "grabbing";
+          }
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (currentMode === "erase") {
+            erase(e);
+          } else if (currentMode === "pan-zoom") {
+            pan(e);
+          }
+        });
+
+        canvas.addEventListener("mouseup", () => {
+          if (isDrawing) {
+            ctx.beginPath(); // Reset path after mouse up
+            isDrawing = false;
+
+            // Save state after completing drawing operation
+            saveCanvasState();
+          }
+
+          if (isDragging) {
+            isDragging = false;
+            if (currentMode === "pan-zoom") {
+              canvas.style.cursor = "move";
+            }
+          }
+        });
+
+        canvas.addEventListener("mouseout", () => {
+          if (isDrawing) {
+            ctx.beginPath(); // Reset path if mouse leaves canvas while drawing
+            isDrawing = false;
+
+            // Save state when mouse leaves canvas
+            saveCanvasState();
+          }
+
+          if (isDragging) {
+            isDragging = false;
+            if (currentMode === "pan-zoom") {
+              canvas.style.cursor = "move";
+            }
+          }
+        });
+
+        // Mouse wheel for zooming
+        canvasContainer.addEventListener("wheel", (e) => {
+          e.preventDefault(); // Prevent page scrolling
+
+          if (currentMode === "pan-zoom") {
+            const rect = canvasContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Determine zoom direction
+            if (e.deltaY < 0) {
+              // Zoom in
+              zoomAtPoint(mouseX, mouseY, 1.1);
+            } else {
+              // Zoom out
+              zoomAtPoint(mouseX, mouseY, 0.9);
+            }
+          }
+        });
+
+        // --- 11. Button Event Handlers ---
+        eraseModeBtn.addEventListener("click", () => setMode("erase"));
+        panZoomModeBtn.addEventListener("click", () => setMode("pan-zoom"));
+        zoomInBtn.addEventListener("click", () => zoomIn());
+        zoomOutBtn.addEventListener("click", () => zoomOut());
+        resetViewBtn.addEventListener("click", resetView);
+        // undoButton.addEventListener("click", undo);
+
+        // --- 12. Brush Size Handler ---
+        brushSizeInput.addEventListener("input", () => {
+          brushSize = parseInt(brushSizeInput.value);
+          brushSizeValue.textContent = `${brushSize}px (${Math.round(
+            brushSize / scale
+          )}px effective)`;
+        });
+
+        // --- 13. Keyboard Shortcuts ---
+        document.addEventListener("keydown", (e) => {
+          // Check if Ctrl key is pressed
+          if (e.ctrlKey) {
+            if (e.key === "e" || e.key === "E") {
+              e.preventDefault();
+              setMode("erase");
+            } else if (e.key === "p" || e.key === "P") {
+              e.preventDefault();
+              setMode("pan-zoom");
+            } else if (e.key === "z" || e.key === "Z") {
+              e.preventDefault();
+              undo();
+            }
+          }
+        });
+
+        // --- 14. Angle Selection Change Handler ---
+        angleRadios.forEach((radio) => {
+          radio.addEventListener("change", (event) => {
+            loadImagesForAngle(event.target.value);
+          });
+        });
+
+        // --- 15. Model Selection Change Handler ---
+        modelRadios.forEach((radio) => {
+          radio.addEventListener("change", (event) => {
+            currentModel = event.target.value;
+            loadImagesForAngle(currentAngle); // Reload images with new model
+          });
+        });
+
+        // --- 16. Save Button Logic ---
+        saveButton.addEventListener("click", async () => {
+          // Create a temporary canvas to merge the visible parts
+          const tempCanvas = document.createElement("canvas");
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+          const tempCtx = tempCanvas.getContext("2d");
+
+          try {
+            // Reset any transformations for saving
+            // We want to save the entire image, not just the current view
+
+            // 1. Draw the bottom image onto the temporary canvas
+            if (bottomImageEl.complete && bottomImageEl.naturalWidth > 0) {
+              tempCtx.drawImage(
+                bottomImageEl,
+                0,
+                0,
+                tempCanvas.width,
+                tempCanvas.height
+              );
+            } else {
+              console.warn("Bottom image not fully loaded or invalid.");
+              // Optionally draw a placeholder or background
+              tempCtx.fillStyle = "#CCCCCC"; // Light grey background
+              tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            }
+
+            // 2. Draw the *current state* of the top canvas (with erased parts) over the bottom image
+            tempCtx.drawImage(canvas, 0, 0);
+
+            // 3. Get the merged image as a data URL
+            const imageDataUrl = tempCanvas.toDataURL("image/png"); // Or 'image/jpeg'
+
+            // 4. Send to Flask backend
+            console.log("Saving image...");
+            const response = await fetch("/api/products/save_edited_image", {
+              // Define this endpoint in Flask
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                image_data: imageDataUrl,
+                product_id: productId,
+                angle: currentAngle,
+                project_id: projectId,
+                model: currentModel,
+                // Add any other relevant data
+                filename: `edited_${productId}_${currentAngle}_${currentModel}.png`,
+              }),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log("Save successful:", result);
+              alert(`Image saved successfully as ${result.filename || "N/A"}!`);
+            } else {
+              console.error(
+                "Save failed:",
+                response.status,
+                await response.text()
+              );
+              alert("Failed to save image. Check console for details.");
+            }
+          } catch (error) {
+            console.error("Error during save process:", error);
+            alert("An error occurred while saving the image.");
+          }
+        });
+
+        setMode("erase"); // Start in erase mode
+        loadImagesForAngle(currentAngle); // Load images for the default selected angle
+        updateUndoButton(); // Initialize undo button state
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
